@@ -219,3 +219,29 @@ def museEEGPipeline(data,fs,collection_time,fs_setting,tuneVal,line,Q,lowcut,hig
     # compute average band power for each channel
     chanAvgBandPower = averageBandPower(bpData,fs,fft_low,fft_high,win)
     return chanAvgBandPower
+
+
+def pairedTTest(data1,data2,output,variableName,channelName,alpha=0.05):
+    #   Inputs  :   data1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #               data2   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #   Output  :   2D array (d0 = samples, d1 = channels) of paired t-test results
+    def init_ttest(data1,data2,variableName,channelName):
+        t_test = stats.ttest_rel(data1,data2)
+        if output==True:
+            if t_test[1] < alpha:
+                if np.mean(data1)-np.mean(data2)<0:
+                    print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+                elif np.mean(data1)-np.mean(data2)>0:
+                    print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+            else:
+                print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+        else:
+            return t_test
+        return t_test
+
+    final_ttest = []
+    for i in range(len(data1.T)):
+        t_test = init_ttest(data1[:,i],data2[:,i],variableName,channelName[i])
+        final_ttest.append(t_test)
+    final_ttest = np.array(final_ttest).T
+    return final_ttest
