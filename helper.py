@@ -46,6 +46,7 @@ def transformToRawEEG(data,fs,collection_time,fs_setting):
         pass
     return rawEEG,time_s
 
+
 def plots(x,y,titles,figsize,pltclr):
     x_lim = [x[0],x[-1]]
     if len(y.T) % 2 != 0:
@@ -96,13 +97,22 @@ class filters:
         y = sosfiltfilt(sos, data, axis=0)
         return y
 
-
-def rolling_window(array, window_size,freq):
-    shape = (array.shape[0] - window_size + 1, window_size)
-    strides = (array.strides[0],) + array.strides
-    rolled = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
-    return rolled[np.arange(0,shape[0],freq)]
-
+def rollingWindow(array,window_size,freq):
+    #   Inputs  :   array    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #               window_size - size of window to be used for sliding
+    #               freq   - step size for sliding window 
+    #   Output  :   3D array (columns of array,no of windows,window size)
+    def rolling_window(array, window_size,freq):
+        shape = (array.shape[0] - window_size + 1, window_size)
+        strides = (array.strides[0],) + array.strides
+        rolled = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
+        return rolled[np.arange(0,shape[0],freq)]
+    out_final = []
+    for i in range(len(array.T)):
+        out_final.append(rolling_window(array[:,i],window_size,freq))
+    out_final = np.asarray(out_final).T
+    out_final = out_final.transpose()
+    return out_final
 
 def customICA(input,tuneVal):
     # algorithm uses ICA to split the eeg into components to allow for easy extraction of ocular artefacts
@@ -143,18 +153,60 @@ def customICA(input,tuneVal):
     x_restored = ica.inverse_transform(out_final)
     return x_restored
 
-def averageBandPower(data,fs,low,high,win):
+def averageBandPower(data,arrayType,fs,low,high,win):
+    #  Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #              or data - 3D numpy array (d0 = channels, d1 = no of windows, d2 = length of windows) of unfiltered EEG data
+    #              arrayType - '2D' or '3D'
+    #              fs      - sampling rate of hardware (defaults to config)
+    #              low     - lower limit in Hz for the brain wave
+    #              high    - upper limit in Hz for the brain wave
+    #              win     - size of window to be used for sliding
+    #   Output  :   3D array (columns of array,no of windows,window size)
     def absPower(data,fs,low,high,win):                                                 
         freqs, psd = signal.welch(data,fs,nperseg=win)
         idx_freqBands = np.logical_and(freqs >= low, freqs <= high) 
         freq_res = freqs[1] - freqs[0]                                  
         freqBand_power = round(simps(psd[idx_freqBands],dx=freq_res),3)      
         return freqBand_power
-    avgBandPower = []
-    for i in range(len(data.T)):
-        avgBandPower.append(absPower(data[:,i],fs,low,high,win))
-    avgBandPower= np.array(avgBandPower).T
+    if arrayType=='2D':
+        avgBandPower = []
+        for i in range(len(data.T)):
+            avgBandPower.append(absPower(data[:,i],fs,low,high,win))
+        avgBandPower= np.array(avgBandPower).T
+    elif arrayType=='3D':
+        avgBandPower = []
+        for i in range(len(data)):
+            x = data[i,:,:]
+            for i in range(len(x)):
+                avgBandPower.append(absPower(x[i,:],fs,low,high,win))
+        avgBandPower= np.array(avgBandPower)
+        avgBandPower = avgBandPower.reshape(len(x),len(data))
     return avgBandPower
+
+
+def spectogramPlot(data,fs,nfft,nOverlap,figsize,titles):
+    #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #               fs      - sampling rate of hardware (defaults to config)
+    #               nfft    - number of points to use in each block (defaults to config)
+    #               nOverlap- number of points to overlap between blocks (defaults to config)
+    #               figsize - size of figure (defaults to config)
+    #               titles  - titles for each channel (defaults to config)
+    y = data
+    if len(y.T) % 2 != 0:
+        nrows,ncols=1,int(len(y.T))
+    elif len(y.T) % 2 == 0:
+        nrows,ncols=2,int(len(y.T)/2)
+    fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
+    fig.suptitle('Spectogram')
+    label= ["Power/Frequency"]
+    for i, axs in enumerate(axs.flatten()):
+        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
+        axs.set_title(titles[i])
+        axs.set_ylim(0,50)
+        axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
+        axs.label_outer()
+    fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
+        
 
 
 def museEEGPipeline(data,fs,collection_time,fs_setting,tuneVal,line,Q,lowcut,highcut,order,fft_low,fft_high,win):
