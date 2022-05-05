@@ -28,10 +28,46 @@ def df_to_table_query(connection, query):
         print(f"Error: '{err}'")
     return df
 
-def transformToRawEEG(data,fs,collection_time,fs_setting):
-    # upsampling is common for muse eeg if the custom setting is utilized
-    # fs = desired sampling frequency
-    # 'constant':eeg signals generated at this rate is perfect
+
+def sqlTableToDataframe(host_name,user_name,user_password,database_name,query):
+    dbConnection = create_db_connection(host_name,user_name,user_password,database_name)
+    sql_query = pd.read_sql_query (query,dbConnection)
+    df = pd.DataFrame(sql_query)
+    return df
+
+def allSQLTableNames(hostName,userName,userPassword,databaseName):
+    # Input: hostName,userName,userPassword,databaseName
+    # Output: list of all table names in database
+    db_connection = create_db_connection(hostName,userName,userPassword,databaseName)
+    cursor = db_connection.cursor()
+    cursor.execute("Show tables;")
+    result = cursor.fetchall()
+    result = [x[0] for x in result]
+    return result
+
+
+def multiSQLTablesToDataframes(hostName,userName,userPassword,databaseName,table_name):
+    # Input: hostName,userName,userPassword,databaseName,table_name
+    #        table_name is a list of all table names in database
+    # Output: 2D array holding four channel tables
+    def tableToDF(host_name,user_name,user_password,database_name,table_name):
+        query = ("% s % s"%('SELECT * FROM', table_name))
+        dbConnection = create_db_connection(host_name,user_name,user_password,database_name)
+        sql_query = pd.read_sql_query (query,dbConnection)
+        df = pd.DataFrame(sql_query)
+        return df
+    tables_ = []
+    for i in range(len(table_name)):
+        tables_.append(tableToDF(hostName,userName,userPassword,databaseName,table_name[i]))
+    #tables_ = np.array(tables_,dtype=object)
+    return tables_
+
+
+def singleTransformToRawEEG(data,fs,collection_time,fs_setting):
+    #   Inputs  :   data    - one dataframe of unfiltered EEG data
+    #   upsampling is common for muse eeg if the custom setting is utilized
+    #   fs = desired sampling frequency
+    #   'constant':eeg signals generated at this rate is perfect
     data = data.dropna()
     rawEEG = data
     t_len = len(rawEEG)
@@ -45,6 +81,20 @@ def transformToRawEEG(data,fs,collection_time,fs_setting):
     elif fs_setting == 'constant':
         pass
     return rawEEG,time_s
+
+
+def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
+    #   Inputs  :   data    -multiple dataframes of unfiltered EEG data
+    #   upsampling is common for muse eeg if the custom setting is utilized
+    #   fs = desired sampling frequency
+    #   'constant':eeg signals generated at this rate is perfect
+    #   Outputs  :   rawEEG  - multiple 2D arrays of raw EEG data collapsed in a 3D array
+    newRawEEG = []
+    for i in range(len(data)):
+        newRawEEG.append((singleTransformToRawEEG(data[i],fs,collection_time,fs_setting))[0])
+    newRawEEG = np.dstack(newRawEEG)
+    newRawEEG = newRawEEG.reshape(newRawEEG.shape[2],newRawEEG.shape[0],newRawEEG.shape[1])
+    return newRawEEG
 
 
 def plots(x,y,titles,figsize,pltclr):
