@@ -256,35 +256,22 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,titles):
         axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
         axs.label_outer()
     fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
-        
 
 
-def museEEGPipeline(data,fs,collection_time,fs_setting,tuneVal,line,Q,lowcut,highcut,order,fft_low,fft_high,win):
-    rawEEG = (transformToRawEEG(data,fs,collection_time,fs_setting))[0]
-    ica_data = customICA(rawEEG,tuneVal)
-    noc=filters()
-    notch_data = noc.notch(ica_data,line,fs,Q)
-    bp = filters()
-    bpData = bp.butterBandPass(notch_data,lowcut,highcut,fs,order)
-    # compute average band power for each channel
-    chanAvgBandPower = averageBandPower(bpData,fs,fft_low,fft_high,win)
-    return chanAvgBandPower
-
-
-def pairedTTest(data1,data2,output,variableName,channelName,alpha=0.05):
+def pairedTTest(data1,data2,show_output,variableName,channelName,alpha=0.05):
     #   Inputs  :   data1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               data2   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #   Output  :   2D array (d0 = samples, d1 = channels) of paired t-test results
     def init_ttest(data1,data2,variableName,channelName):
         t_test = stats.ttest_rel(data1,data2)
-        if output==True:
+        if show_output==True:
             if t_test[1] < alpha:
                 if np.mean(data1)-np.mean(data2)<0:
-                    print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+                    print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
                 elif np.mean(data1)-np.mean(data2)>0:
-                    print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+                    print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
             else:
-                print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],3)))
+                print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
         else:
             return t_test
         return t_test
@@ -295,3 +282,5 @@ def pairedTTest(data1,data2,output,variableName,channelName,alpha=0.05):
         final_ttest.append(t_test)
     final_ttest = np.array(final_ttest).T
     return final_ttest
+
+
