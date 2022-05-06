@@ -23,9 +23,10 @@ Q = 30
 lowcut = 0.1
 highcut = 30
 order = 4
-win = 4*fs
-window_size = 3072
-step_size = int(window_size/4)
+win = 4*fs # 4*fs = 1024
+# 1280 (5-seconds) 3072 (12-seconds) 1024 (4-seconds)
+window_size = 1024
+step_size = 1 # int(window_size/4)
 nfft = int(window_size/2)
 noverlap = int(nfft/2)
 brainwaves = dict(delta = [0.5,4],theta = [4,8],alpha = [8,13],beta = [13,32],gamma = [32,100])
