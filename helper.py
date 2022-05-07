@@ -96,6 +96,35 @@ def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
     newRawEEG = newRawEEG.reshape(newRawEEG.shape[2],newRawEEG.shape[0],newRawEEG.shape[1])
     return newRawEEG
 
+def meanComparisonPlots(tp1,tp2,chanName,groups,plot_title):
+    groupA_T1,groupA_T2= np.mean(tp1[0],axis=0),np.mean(tp2[0],axis=0)
+    groupB_T1,groupB_T2 = np.mean(tp1[1],axis=0),np.mean(tp2[1],axis=0)
+    grpA_std_T1,grpA_std_T2 = np.std(tp1[0],axis=0),np.std(tp2[0],axis=0)
+    grpB_std_T1,grpB_std_T2 = np.std(tp1[1],axis=0),np.std(tp2[1],axis=0)
+    length = len(groupA_T1)
+    x_labels = chanName
+    # Set plot parameters
+    fig, ax = plt.subplots()
+    width = 0.2 # width of bar
+    x = np.arange(length)
+
+    ax.bar(x,groupA_T1, width, color='#90EE90', label=groups[0], yerr=grpA_std_T1)
+    ax.bar(x + width,groupA_T2, width, color='#013220', label=groups[1], yerr=grpA_std_T2)
+    ax.bar(x + (2 * width),groupB_T1, width, color='#C4A484', label=groups[2], yerr=grpB_std_T1)
+    ax.bar(x + (3 * width),groupB_T2, width, color='#654321', label=groups[3], yerr=grpB_std_T2)
+    ax.set_ylabel('Average Band Power')
+    #ylim = np.amax()
+    #ax.set_ylim(0,1000)
+    ax.set_xticks(x + width + width/2)
+    ax.set_xticklabels(x_labels)
+    ax.set_xlabel('Channels')
+    ax.set_title(plot_title)
+    ax.legend()
+    plt.grid(True, 'major', 'y', ls='--', lw=.5, c='k', alpha=.3)
+    fig.tight_layout()
+    plt.show()
+    pass
+
 
 def plots(x,y,titles,figsize,pltclr):
     x_lim = [x[0],x[-1]]
@@ -269,18 +298,18 @@ def pairedTTest(data1,data2,show_output,variableName,channelName,alpha=0.05):
 
     if nrmdistributionTest < alpha:
         def init_ttest(data1,data2,variableName,channelName):
-            t_test = wilcoxon(data1,data2)
+            t_test = (wilcoxon(data1,data2))[1]
             if show_output==True:
-                if t_test[1] < alpha:
+                if t_test < alpha:
                     if np.mean(data1)-np.mean(data2)<0:
                         print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                        print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                        print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
                     elif np.mean(data1)-np.mean(data2)>0:
                         print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                        print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                        print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
                 else:
                     print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                    print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                    print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
             else:
                 return t_test
             return t_test
@@ -293,18 +322,18 @@ def pairedTTest(data1,data2,show_output,variableName,channelName,alpha=0.05):
 
     if nrmdistributionTest > alpha:
         def init_ttest(data1,data2,variableName,channelName):
-            t_test = stats.ttest_rel(data1,data2)
+            t_test = (stats.ttest_rel(data1,data2))[1]
             if show_output==True:
-                if t_test[1] < alpha:
+                if t_test < alpha:
                     if np.mean(data1)-np.mean(data2)<0:
                         print("Paired t-Test: {} at {} is normally distributed".format(variableName,channelName))
-                        print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                        print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
                     elif np.mean(data1)-np.mean(data2)>0:
                         print("Paired t-Test: {} at {} is normally distributed".format(variableName,channelName))
-                        print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                        print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
                 else:
                     print("Paired t-Test: {} at {} is normally distributed".format(variableName,channelName))
-                    print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test[1],5)))
+                    print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
             else:
                 return t_test
             return t_test
