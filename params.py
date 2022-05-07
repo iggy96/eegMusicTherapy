@@ -46,3 +46,4 @@ controlGroup_1 = [['MH_03_ES1_task1','MH_06_ES1_task1','MH_08_ES1_task1','MH_13_
 controlGroup_2 = [['MH_03_ES2_task1','MH_06_ES2_task1','MH_08_ES2_task1','MH_13_ES2_task1','MH_14_ES2_task1','MH_15_ES2_task1'],
                     ['MH_03_ES2_task2','MH_06_ES2_task2','MH_08_ES2_task2','MH_13_ES2_task2','MH_14_ES2_task2','MH_15_ES2_task2'],
                     ['MH_03_ES2_task3','MH_06_ES2_task3','MH_08_ES2_task3','MH_13_ES2_task3','MH_14_ES2_task3','MH_15_ES2_task3']]
+studygroups = ['Music 1','Music 2','Control 1','Control 2']
