@@ -12,4 +12,4 @@ from sklearn.decomposition import FastICA
 from scipy.integrate import simps
 from scipy import stats
 import more_itertools as mit
-from scipy.stats import shapiro,wilcoxon
+from scipy.stats import shapiro,wilcoxon,anderson
