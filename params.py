@@ -3,10 +3,6 @@ hostName = "localhost"
 userName = "root"
 userPassword = "1A3g5m7t9n#" # IMPORTANT! Put your MySQL Terminal password here.
 databaseName = 'music_therapy_eeg'
-tableName_1 = 'MH_01_ES1_task1'
-tableName_2 = 'MH_01_ES2_task1'
-query_1 = ("% s % s"%('SELECT * FROM', tableName_1))
-query_2 = ("% s % s"%('SELECT * FROM', tableName_2))
 
 
 # eeg preprocessing parameters
@@ -23,12 +19,13 @@ Q = 30
 lowcut = 0.1
 highcut = 30
 order = 4
-win = 4*fs # 4*fs = 1024
-# 1280 (5-seconds) 3072 (12-seconds) 1024 (4-seconds)
-window_size = 512
-step_size = 32 # int(window_size/4)
-nfft = int(window_size/2)
-noverlap = int(nfft/2)
+win = fs # 4*fs = 1024
+# 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds)
+# step size = window size / 2
+window_size = 2560
+step_size = 1
+nfft = 256
+noverlap = 128
 brainwaves = dict(delta = [0.5,4],theta = [4,8],alpha = [8,13],beta = [13,32],gamma = [32,100])
 
 # music therapy files
