@@ -20,7 +20,7 @@ lowcut = 0.1
 highcut = 30
 order = 4
 win = fs # 4*fs = 1024
-# 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds)
+# 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) 2560&1280
 # step size = window size / 2
 window_size = 2560
 step_size = 1280
