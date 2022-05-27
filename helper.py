@@ -292,37 +292,81 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,titles):
     fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
 
 
-def pairedTTest(data1,data2,show_output,variableName,channelName,alpha=0.05):
-    #   Inputs  :   data1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #               data2   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #   Output  :   2D array (d0 = samples, d1 = channels) of paired t-test results
-    #   Shapiro Wilks Normal Distribution Test:     p < 0.05 : not normally distributed
-    #                                               p > 0.05 : normally distributed
+def normalityTest(data):
+    #   Inputs  :   difference between data from two timepoints 
+    #   Output  :   result of normality test (p-value test)
+    #           :   choice of technique for significance testing
+
+    print ("Executing Shapiro Wilks Test...")
+
+    if shapiro(data)[1] > 0.05:
+        pVal = shapiro(data)[1]
+        print ("Shapiro Wilks Test: data is normally distributed, P-Value=", pVal)
+        print("Confirm Shapiro Wilks Test normality result with D’Agostino’s K^2 test")
+        print ("Executing D’Agostino’s K^2 Test...")
+        if stats.normaltest(data)[1] > 0.05:
+            pVal = stats.normaltest(data)[1]
+            print ("D’Agostino’s K^2 Test: data is normally distributed, P-Value=", pVal)
+            print("Confirm D’Agostino’s K^2 Test normality result with Anderson-Darling Test")
+            print ("Executing Anderson-Darling Test...")
+            result = anderson(data)
+            print('Statistic: %.3f' % result.statistic)
+            p = 0
+            for i in range(len(result.critical_values)):
+                sl, cv = result.significance_level[i], result.critical_values[i]
+                if result.statistic < result.critical_values[i]:
+                    print('%.3f: %.3f, Anderson-Darling Test: data is normally distributed' % (sl, cv))
+        print ("Utilize Paired T-test to evaluate significance of data")        
+
+    if shapiro(data)[1] <= 0.05:
+        pVal = shapiro(data)[1]
+        print ("Shapiro Wilks Test: data is not normally distributed, P-Value=", pVal)
+        print("Confirm Shapiro Wilks Test non-normality result with D’Agostino’s K^2 test")
+        print ("Executing D’Agostino’s K^2 Test...")
+        if stats.normaltest(data)[1] < 0.05:
+            pVal = stats.normaltest(data)[1]
+            print ("D’Agostino’s K^2 Test: data is not normally distributed, P-Value=", pVal)
+            print("Confirm D’Agostino’s K^2 Test non-normality result with Anderson-Darling Test")
+            print ("Executing Anderson-Darling Test...")
+            result = anderson(data)
+            print('Statistic: %.3f' % result.statistic)
+            p = 0
+            for i in range(len(result.critical_values)):
+                sl, cv = result.significance_level[i], result.critical_values[i]
+                if result.statistic > result.critical_values[i]:
+                    print('%.3f: %.3f, Anderson-Darling Test: data is not normally distributed' % (sl, cv))
+        print ("Utilize non parametric methods e.g., Wilcoxon Signed Test etc., to evaluate significance of data")
+    pass
 
 
-    def init_ttest(data1,data2,variableName,channelName):
-        t_test = (wilcoxon(data1,data2))[1]
+def wilcoxonTest(data_1,data_2,show_output,variableName,channelName,alpha=0.05):
+    #   Inputs  :       data_1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #                   data_2   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #   Output  :       2D array (d0 = samples, d1 = channels) of paired t-test results
+    #   wilcoxon Test:  P < 0.05 : significance difference exists
+    #                   P > 0.05 : no significance difference exists
+    #   SD           :  Signficant difference between the two groups
+
+    def initializeTest(data_1,data_2,variableName,channelName):
+        stat_test_1 = (wilcoxon(data_1,data_2))[1]
         if show_output==True:
-            if t_test < alpha:
-                if np.mean(data1)-np.mean(data2)<0:
-                    #print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                    print("for {} there is a significant difference (increase) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
-                elif np.mean(data1)-np.mean(data2)>0:
-                    #print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                    print("for {} there is a significant difference (decrease) at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
+            if stat_test_1 < alpha:
+                if np.mean(data_1)-np.mean(data_2)<0:
+                    print("{}: SD (increase) exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
+                elif np.mean(data_1)-np.mean(data_2)>0:
+                    print("{}: SD (decrease) exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
             else:
-                #print("Wilcoxon-Signed Rank Test: {} at {} is not normally distributed".format(variableName,channelName))
-                print("for {} there is no significant difference at {} where the P-value = {}".format(variableName,channelName,round(t_test,5)))
+                print("{}: SD does not exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
         else:
-            return t_test
-        return t_test
+            return stat_test_1
+        return stat_test_1
 
-    final_ttest = []
-    for i in range(len(data1.T)):
-        t_test = init_ttest(data1[:,i],data2[:,i],variableName,channelName[i])
-        final_ttest.append(t_test)
-    final_ttest = np.array(final_ttest).T
+    stat_test_3 = []
+    for i in range(len(data_1.T)):
+        stat_test_2 = initializeTest(data_1[:,i],data_2[:,i],variableName,channelName[i])
+        stat_test_3.append(stat_test_2)
+    stat_test_3 = np.array(stat_test_3).T
 
-    return final_ttest
+    return stat_test_3
 
 
