@@ -117,8 +117,6 @@ def meanComparisonPlots(tp1,tp2,chanName,groups,plot_title):
     ax.bar(x + (2 * width),groupB_T1, width, color='#C4A484', label=groups[2], yerr=grpB_std_T1)
     ax.bar(x + (3 * width),groupB_T2, width, color='#654321', label=groups[3], yerr=grpB_std_T2)
     ax.set_ylabel('Average Band Power')
-    #ylim = np.amax()
-    #ax.set_ylim(0,1000)
     ax.set_xticks(x + width + width/2)
     ax.set_xticklabels(x_labels)
     ax.set_xlabel('Channels')
@@ -129,6 +127,51 @@ def meanComparisonPlots(tp1,tp2,chanName,groups,plot_title):
     plt.show()
     pass
 
+def testMean(tp1,tp2,chanName,groups,plot_title):
+    groupA1_T1 = np.mean(tp1[0],axis=0)
+    groupA2_T1 = np.mean(tp1[1],axis=0)
+    groupA1_T2 = np.mean(tp2[0],axis=0)
+    groupA2_T2 = np.mean(tp2[1],axis=0)
+
+    groupB1_T1 = np.mean(tp1[2],axis=0)
+    groupB2_T1 = np.mean(tp1[3],axis=0)
+    groupB1_T2 = np.mean(tp2[2],axis=0)
+    groupB2_T2 = np.mean(tp2[3],axis=0)
+
+    grpA1_std_T1 = np.std(tp1[0],axis=0)
+    grpA2_std_T1 = np.std(tp1[1],axis=0)
+    grpA1_std_T2 = np.std(tp2[0],axis=0)
+    grpA2_std_T2 = np.std(tp2[1],axis=0)
+
+    grpB1_std_T1 = np.std(tp1[2],axis=0)
+    grpB2_std_T1 = np.std(tp1[3],axis=0)
+    grpB1_std_T2 = np.std(tp2[2],axis=0)
+    grpB2_std_T2 = np.std(tp2[3],axis=0)
+    length = len(groupA1_T1)
+    x_labels = chanName
+    # Set plot parameters
+    fig, ax = plt.subplots()
+    width = 0.2 # width of bar
+    x = np.arange(length)
+
+    ax.bar(x,groupA1_T1, width, color='#90EE90', label=groups[0], yerr=grpA1_std_T1)
+    ax.bar(x,groupA2_T1, width, color='#90EE90', label=groups[0], yerr=grpA2_std_T1)   
+    ax.bar(x + width,groupA1_T2, width, color='#013220', label=groups[1], yerr=grpA1_std_T2)
+    ax.bar(x + width,groupA2_T2, width, color='#013220', label=groups[1], yerr=grpA2_std_T2)
+    ax.bar(x + (2 * width),groupB1_T1, width, color='#C4A484', label=groups[2], yerr=grpB1_std_T1)
+    ax.bar(x + (2 * width),groupB2_T1, width, color='#C4A484', label=groups[2], yerr=grpB2_std_T1)
+    ax.bar(x + (3 * width),groupB1_T2, width, color='#654321', label=groups[3], yerr=grpB1_std_T2)
+    ax.bar(x + (3 * width),groupB2_T2, width, color='#654321', label=groups[3], yerr=grpB2_std_T2)
+    ax.set_ylabel('Average Band Power')
+    ax.set_xticks(x + width + width/2)
+    ax.set_xticklabels(x_labels)
+    ax.set_xlabel('Channels')
+    ax.set_title(plot_title)
+    ax.legend()
+    plt.grid(True, 'major', 'y', ls='--', lw=.5, c='k', alpha=.3)
+    fig.tight_layout()
+    plt.show()
+    pass
 
 def plots(x,y,titles,figsize,pltclr):
     x_lim = [x[0],x[-1]]
@@ -267,7 +310,7 @@ def averageBandPower(data,arrayType,fs,low,high,win):
     return avgBandPower
 
 
-def spectogramPlot(data,fs,nfft,nOverlap,figsize,titles):
+def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               fs      - sampling rate of hardware (defaults to config)
     #               nfft    - number of points to use in each block (defaults to config)
@@ -280,11 +323,11 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,titles):
     elif len(y.T) % 2 == 0:
         nrows,ncols=2,int(len(y.T)/2)
     fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
-    fig.suptitle('Spectogram')
+    fig.suptitle(title)
     label= ["Power/Frequency"]
     for i, axs in enumerate(axs.flatten()):
         d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
-        axs.set_title(titles[i])
+        axs.set_title(subTitles[i])
         axs.set_ylim(0,50)
         axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
         axs.label_outer()
@@ -297,18 +340,18 @@ def normalityTest(data):
     #   Output  :   result of normality test (p-value test)
     #           :   choice of technique for significance testing
 
-    print ("Executing Shapiro Wilks Test...")
+    print ("....Executing Shapiro Wilks Test.......... "'\n')
 
     if shapiro(data)[1] > 0.05:
         pVal = shapiro(data)[1]
         print ("Shapiro Wilks Test: data is normally distributed, P-Value=", pVal)
-        print("Confirm Shapiro Wilks Test normality result with D’Agostino’s K^2 test")
-        print ("Executing D’Agostino’s K^2 Test...")
+        print('\n'"....confirming Shapiro Wilks Test normality result with D’Agostino’s K^2 test........."'\n')
+        print ("....Executing D’Agostino’s K^2 Test..........")
         if stats.normaltest(data)[1] > 0.05:
             pVal = stats.normaltest(data)[1]
             print ("D’Agostino’s K^2 Test: data is normally distributed, P-Value=", pVal)
-            print("Confirm D’Agostino’s K^2 Test normality result with Anderson-Darling Test")
-            print ("Executing Anderson-Darling Test...")
+            print('\n'"....confirming D’Agostino’s K^2 Test normality result with Anderson-Darling Test........"'\n')
+            print ("....Executing Anderson-Darling Test..........")
             result = anderson(data)
             print('Statistic: %.3f' % result.statistic)
             p = 0
@@ -316,17 +359,17 @@ def normalityTest(data):
                 sl, cv = result.significance_level[i], result.critical_values[i]
                 if result.statistic < result.critical_values[i]:
                     print('%.3f: %.3f, Anderson-Darling Test: data is normally distributed' % (sl, cv))
-        print ("Utilize Paired T-test to evaluate significance of data")        
+        print ('\n'"Utilize Paired T-test to evaluate significance of data")        
 
     if shapiro(data)[1] <= 0.05:
         pVal = shapiro(data)[1]
         print ("Shapiro Wilks Test: data is not normally distributed, P-Value=", pVal)
-        print("Confirm Shapiro Wilks Test non-normality result with D’Agostino’s K^2 test")
+        print('\n'"....confirming Shapiro Wilks Test non-normality result with D’Agostino’s K^2 test......."'\n')
         print ("Executing D’Agostino’s K^2 Test...")
         if stats.normaltest(data)[1] < 0.05:
             pVal = stats.normaltest(data)[1]
             print ("D’Agostino’s K^2 Test: data is not normally distributed, P-Value=", pVal)
-            print("Confirm D’Agostino’s K^2 Test non-normality result with Anderson-Darling Test")
+            print('\n'"....confirming D’Agostino’s K^2 Test non-normality result with Anderson-Darling Test......."'\n')
             print ("Executing Anderson-Darling Test...")
             result = anderson(data)
             print('Statistic: %.3f' % result.statistic)
@@ -335,7 +378,7 @@ def normalityTest(data):
                 sl, cv = result.significance_level[i], result.critical_values[i]
                 if result.statistic > result.critical_values[i]:
                     print('%.3f: %.3f, Anderson-Darling Test: data is not normally distributed' % (sl, cv))
-        print ("Utilize non parametric methods e.g., Wilcoxon Signed Test etc., to evaluate significance of data")
+        print ('\n'"Utilize non parametric methods e.g., Wilcoxon Signed Test etc., to evaluate significance of data")
     pass
 
 
