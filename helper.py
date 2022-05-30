@@ -96,82 +96,90 @@ def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
     newRawEEG = newRawEEG.reshape(newRawEEG.shape[2],newRawEEG.shape[0],newRawEEG.shape[1])
     return newRawEEG
 
-def meanComparisonPlots(tp1,tp2,chanName,groups,plot_title):
-    groupA_T1 = np.mean(tp1[0],axis=0)
-    groupA_T2 = np.mean(tp2[0],axis=0)
-    groupB_T1 = np.mean(tp1[1],axis=0)
-    groupB_T2 = np.mean(tp2[1],axis=0)
-    grpA_std_T1 = np.std(tp1[0],axis=0)
-    grpA_std_T2 = np.std(tp2[0],axis=0)
-    grpB_std_T1 = np.std(tp1[1],axis=0)
-    grpB_std_T2 = np.std(tp2[1],axis=0)
-    length = len(groupA_T1)
-    x_labels = chanName
+
+def plot_averageBandPower(groupA,groupB,x_labels,groups,figure_size,plot_title):
+    mean_groupA_11 = np.mean(groupA[0][0],axis=0)
+    mean_groupA_12 = np.mean(groupA[0][1],axis=0)
+    mean_groupA_13 = np.mean(groupA[0][2],axis=0)
+    mean_groupA_21 = np.mean(groupA[1][0],axis=0)
+    mean_groupA_22 = np.mean(groupA[1][1],axis=0)
+    mean_groupA_23 = np.mean(groupA[1][2],axis=0)
+    mean_groupB_11 = np.mean(groupB[0][0],axis=0)
+    mean_groupB_12 = np.mean(groupB[0][1],axis=0)
+    mean_groupB_13 = np.mean(groupB[0][2],axis=0)
+    mean_groupB_21 = np.mean(groupB[1][0],axis=0)
+    mean_groupB_22 = np.mean(groupB[1][1],axis=0)
+    mean_groupB_23 = np.mean(groupB[1][2],axis=0)
+    std_groupA_11 = np.std(groupA[0][0],axis=0)
+    std_groupA_12 = np.std(groupA[0][1],axis=0)
+    std_groupA_13 = np.std(groupA[0][2],axis=0)
+    std_groupA_21 = np.std(groupA[1][0],axis=0)
+    std_groupA_22 = np.std(groupA[1][1],axis=0)
+    std_groupA_23 = np.std(groupA[1][2],axis=0)
+    std_groupB_11 = np.std(groupB[0][0],axis=0)
+    std_groupB_12 = np.std(groupB[0][1],axis=0)
+    std_groupB_13 = np.std(groupB[0][2],axis=0)
+    std_groupB_21 = np.std(groupB[1][0],axis=0)
+    std_groupB_22 = np.std(groupB[1][1],axis=0)
+    std_groupB_23 = np.std(groupB[1][2],axis=0)
+
+    data_mean = np.array([[mean_groupA_11[0],mean_groupA_21[0],mean_groupB_11[0],mean_groupB_21[0]],
+                            [mean_groupA_11[1],mean_groupA_21[1],mean_groupB_11[1],mean_groupB_21[1]],
+                            [mean_groupA_11[2],mean_groupA_21[2],mean_groupB_11[2],mean_groupB_21[2]],
+                            [mean_groupA_11[3],mean_groupA_21[3],mean_groupB_11[3],mean_groupB_21[3]],
+                            [0,0,0,0],
+                            [mean_groupA_12[0],mean_groupA_22[0],mean_groupB_12[0],mean_groupB_22[0]],
+                            [mean_groupA_12[1],mean_groupA_22[1],mean_groupB_12[1],mean_groupB_22[1]],
+                            [mean_groupA_12[2],mean_groupA_22[2],mean_groupB_12[2],mean_groupB_22[2]],
+                            [mean_groupA_12[3],mean_groupA_22[3],mean_groupB_12[3],mean_groupB_22[3]],
+                            [0,0,0,0],
+                            [mean_groupA_13[0],mean_groupA_23[0],mean_groupB_13[0],mean_groupB_23[0]],
+                            [mean_groupA_13[1],mean_groupA_23[1],mean_groupB_13[1],mean_groupB_23[1]],
+                            [mean_groupA_13[2],mean_groupA_23[2],mean_groupB_13[2],mean_groupB_23[2]],
+                            [mean_groupA_13[3],mean_groupA_23[3],mean_groupB_13[3],mean_groupB_23[3]]])
+
+    data_std = np.array([[std_groupA_11[0],std_groupA_21[0],std_groupB_11[0],std_groupB_21[0]],
+                            [std_groupA_11[1],std_groupA_21[1],std_groupB_11[1],std_groupB_21[1]],
+                            [std_groupA_11[2],std_groupA_21[2],std_groupB_11[2],std_groupB_21[2]],
+                            [std_groupA_11[3],std_groupA_21[3],std_groupB_11[3],std_groupB_21[3]],
+                            [0,0,0,0],
+                            [std_groupA_12[0],std_groupA_22[0],std_groupB_12[0],std_groupB_22[0]],
+                            [std_groupA_12[1],std_groupA_22[1],std_groupB_12[1],std_groupB_22[1]],
+                            [std_groupA_12[2],std_groupA_22[2],std_groupB_12[2],std_groupB_22[2]],
+                            [std_groupA_12[3],std_groupA_22[3],std_groupB_12[3],std_groupB_22[3]],
+                            [0,0,0,0],
+                            [std_groupA_13[0],std_groupA_23[0],std_groupB_13[0],std_groupB_23[0]],
+                            [std_groupA_13[1],std_groupA_23[1],std_groupB_13[1],std_groupB_23[1]],
+                            [std_groupA_13[2],std_groupA_23[2],std_groupB_13[2],std_groupB_23[2]],
+                            [std_groupA_13[3],std_groupA_23[3],std_groupB_13[3],std_groupB_23[3]]])
+
+
+
+    length = len(data_mean)
+
     # Set plot parameters
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(figure_size[0],figure_size[1]))
     width = 0.2 # width of bar
     x = np.arange(length)
 
-    ax.bar(x,groupA_T1, width, color='#90EE90', label=groups[0], yerr=grpA_std_T1)
-    ax.bar(x + width,groupA_T2, width, color='#013220', label=groups[1], yerr=grpA_std_T2)
-    ax.bar(x + (2 * width),groupB_T1, width, color='#C4A484', label=groups[2], yerr=grpB_std_T1)
-    ax.bar(x + (3 * width),groupB_T2, width, color='#654321', label=groups[3], yerr=grpB_std_T2)
+    ax.bar(x, data_mean[:,0], width, color='#90EE90', label=groups[0], yerr=data_std[:,0])
+    ax.bar(x + width, data_mean[:,1], width, color='#013220', label=groups[1], yerr=data_std[:,1])
+    ax.bar(x + (2 * width), data_mean[:,2], width, color='#C4A484', label=groups[2], yerr=data_std[:,2])
+    ax.bar(x + (3 * width), data_mean[:,3], width, color='#654321', label=groups[3], yerr=data_std[:,3])
+
     ax.set_ylabel('Average Band Power')
+    #ax.set_ylim(0,1000)
+    #ax.set_yticks(np.arange(0,1000,100))
     ax.set_xticks(x + width + width/2)
     ax.set_xticklabels(x_labels)
-    ax.set_xlabel('Channels')
     ax.set_title(plot_title)
     ax.legend()
     plt.grid(True, 'major', 'y', ls='--', lw=.5, c='k', alpha=.3)
+
     fig.tight_layout()
     plt.show()
     pass
 
-def testMean(tp1,tp2,chanName,groups,plot_title):
-    groupA1_T1 = np.mean(tp1[0],axis=0)
-    groupA2_T1 = np.mean(tp1[1],axis=0)
-    groupA1_T2 = np.mean(tp2[0],axis=0)
-    groupA2_T2 = np.mean(tp2[1],axis=0)
-
-    groupB1_T1 = np.mean(tp1[2],axis=0)
-    groupB2_T1 = np.mean(tp1[3],axis=0)
-    groupB1_T2 = np.mean(tp2[2],axis=0)
-    groupB2_T2 = np.mean(tp2[3],axis=0)
-
-    grpA1_std_T1 = np.std(tp1[0],axis=0)
-    grpA2_std_T1 = np.std(tp1[1],axis=0)
-    grpA1_std_T2 = np.std(tp2[0],axis=0)
-    grpA2_std_T2 = np.std(tp2[1],axis=0)
-
-    grpB1_std_T1 = np.std(tp1[2],axis=0)
-    grpB2_std_T1 = np.std(tp1[3],axis=0)
-    grpB1_std_T2 = np.std(tp2[2],axis=0)
-    grpB2_std_T2 = np.std(tp2[3],axis=0)
-    length = len(groupA1_T1)
-    x_labels = chanName
-    # Set plot parameters
-    fig, ax = plt.subplots()
-    width = 0.2 # width of bar
-    x = np.arange(length)
-
-    ax.bar(x,groupA1_T1, width, color='#90EE90', label=groups[0], yerr=grpA1_std_T1)
-    ax.bar(x,groupA2_T1, width, color='#90EE90', label=groups[0], yerr=grpA2_std_T1)   
-    ax.bar(x + width,groupA1_T2, width, color='#013220', label=groups[1], yerr=grpA1_std_T2)
-    ax.bar(x + width,groupA2_T2, width, color='#013220', label=groups[1], yerr=grpA2_std_T2)
-    ax.bar(x + (2 * width),groupB1_T1, width, color='#C4A484', label=groups[2], yerr=grpB1_std_T1)
-    ax.bar(x + (2 * width),groupB2_T1, width, color='#C4A484', label=groups[2], yerr=grpB2_std_T1)
-    ax.bar(x + (3 * width),groupB1_T2, width, color='#654321', label=groups[3], yerr=grpB1_std_T2)
-    ax.bar(x + (3 * width),groupB2_T2, width, color='#654321', label=groups[3], yerr=grpB2_std_T2)
-    ax.set_ylabel('Average Band Power')
-    ax.set_xticks(x + width + width/2)
-    ax.set_xticklabels(x_labels)
-    ax.set_xlabel('Channels')
-    ax.set_title(plot_title)
-    ax.legend()
-    plt.grid(True, 'major', 'y', ls='--', lw=.5, c='k', alpha=.3)
-    fig.tight_layout()
-    plt.show()
-    pass
 
 def plots(x,y,titles,figsize,pltclr):
     x_lim = [x[0],x[-1]]
