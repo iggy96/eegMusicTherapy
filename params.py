@@ -6,7 +6,7 @@ databaseName = 'music_therapy_eeg'
 
 
 # eeg preprocessing parameters
-tuneval = 2
+tuneval = 3
 fs = 256
 collection_time = 120
 fs_setting = 'resample'
