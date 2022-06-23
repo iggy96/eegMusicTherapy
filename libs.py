@@ -13,3 +13,6 @@ from scipy.integrate import simps
 from scipy import stats
 import more_itertools as mit
 from scipy.stats import shapiro,wilcoxon,anderson
+from pywt import wavedec
+from pywt import waverec
+import seaborn as sns
