@@ -70,16 +70,15 @@ def singleTransformToRawEEG(data,fs,collection_time,fs_setting):
     #   'constant':eeg signals generated at this rate is perfect
     data = data.dropna()
     rawEEG = data
-    t_len = len(rawEEG)
-    period = (1.0/fs)
-    time_s = np.arange(0, t_len * period, period)
     if fs_setting == 'resample':
         rawEEG = signal.resample(rawEEG,fs*collection_time)
         t_len = len(rawEEG)
         period = (1.0/fs)
         time_s = np.arange(0, t_len * period, period)
     elif fs_setting == 'constant':
-        pass
+        rawEEG = rawEEG.to_numpy()
+        t_len = len(rawEEG)
+        time_s = np.linspace(start=0, stop=collection_time, num=len(rawEEG))
     return rawEEG,time_s
 
 
@@ -94,8 +93,23 @@ def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
         newRawEEG.append((singleTransformToRawEEG(data[i],fs,collection_time,fs_setting))[0])
     newRawEEG = np.dstack(newRawEEG)
     newRawEEG = newRawEEG.reshape(newRawEEG.shape[2],newRawEEG.shape[0],newRawEEG.shape[1])
-    return newRawEEG
+    time_s = singleTransformToRawEEG(data[0],fs,collection_time,fs_setting)[1]
+    return newRawEEG,time_s
 
+def multiChannelDWT(data,time_array,wavelet):
+    """
+        Inputs  :   data    -multiple dataframes of unfiltered EEG data
+        upsampling is common for muse eeg if the custom setting is utilized
+        fs = desired sampling frequency
+        'constant':eeg signals generated at this rate is perfect
+        Outputs  :   rawEEG  - multiple 2D arrays of raw EEG data collapsed in a 3D array
+    """
+    dwtEEG = []
+    for i in range(len(data.T)):
+        dwtEEG.append(singleChannelDWT(data[:,i],time_array,wavelet))
+    dwtEEG = np.array(dwtEEG).T
+    dwtEEG = dwtEEG.reshape(dwtEEG.shape[1],dwtEEG.shape[2])
+    return dwtEEG
 
 def plot_averageBandPower(groupA,groupB,x_labels,groups,figure_size,plot_title):
     mean_groupA_11 = np.mean(groupA[0][0],axis=0)
@@ -336,7 +350,7 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     for i, axs in enumerate(axs.flatten()):
         d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
         axs.set_title(subTitles[i])
-        axs.set_ylim(0,50)
+        axs.set_ylim(0,80)
         axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
         axs.label_outer()
         axs
@@ -403,11 +417,14 @@ def wilcoxonTest(data_1,data_2,show_output,variableName,channelName,alpha=0.05):
         if show_output==True:
             if stat_test_1 < alpha:
                 if np.mean(data_1)-np.mean(data_2)<0:
-                    print("{}: SD (increase) exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
+                    print("{} | {} | P-value = {} | SD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
                 elif np.mean(data_1)-np.mean(data_2)>0:
-                    print("{}: SD (decrease) exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
+                    print("{} | {} | P-value = {} | SD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
             else:
-                print("{}: SD does not exists at {}, P-value = {}".format(variableName,channelName,round(stat_test_1,5)))
+                if np.mean(data_1)-np.mean(data_2)<0:
+                    print("{} | {} | P-value = {} | NSD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
+                elif np.mean(data_1)-np.mean(data_2)>0:
+                    print("{} | {} | P-value = {} | NSD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
         else:
             return stat_test_1
         return stat_test_1
@@ -417,7 +434,103 @@ def wilcoxonTest(data_1,data_2,show_output,variableName,channelName,alpha=0.05):
         stat_test_2 = initializeTest(data_1[:,i],data_2[:,i],variableName,channelName[i])
         stat_test_3.append(stat_test_2)
     stat_test_3 = np.array(stat_test_3).T
-
+    print("\n")
     return stat_test_3
 
 
+def singleChannelDWT(data,time_array,wavelet):
+    #   Probability Mapping Based Artifact Detection and Wavelet Denoising based 
+    #   Artifact Removal from Scalp EEG for BCI Applications
+    #  Perform DWT on the data
+    #   Input: data - EEG data: 1D array (samples x channel)
+    #   Output: new signal: (samples x number of wavelets)
+    #           signal_global - new signal extracted after global threshold 
+    #           signal_std - new signal extracted after std threshold 
+    #   Reference:  choice of number of levels to threshold gotten from "Comparative Study of Wavelet-Based Unsupervised 
+    #               Ocular Artifact Removal Techniques for Single-Channel EEG Data"
+    
+    def dwt_only(data,wavelet):
+        def dwt(data,wavelet):
+            coeffs = wavedec(data,wavelet,level=10)
+            return np.array(coeffs,dtype=object).T
+
+        def global_threshold(data,coeffs):
+            def coeffs_approx(data,coeffs):
+                return (np.median(abs(coeffs[0]))/0.6745)*(np.sqrt(2*np.log(len(data))))
+            def coeffs_detail(data,coeffs):
+                return (np.median(abs(coeffs[1]))/0.6745)*(np.sqrt(2*np.log(len(data))))
+            arr_approx = coeffs_approx(data,coeffs)
+            arr_detail = coeffs_detail(data,coeffs)
+            return np.vstack((arr_approx,arr_detail))
+
+        def apply_threshold(coeffs,threshold):
+            def apply_threshold_approx(coeffs,threshold):
+                coeffs[0][abs(coeffs[0])>threshold[1]] = 0
+                coeffs_approx = coeffs[0]
+                return coeffs_approx
+            def apply_threshold_detail(coeffs,threshold):
+                coeffs = coeffs[1:len(coeffs)]
+                coeffs[0][abs(coeffs[0])>threshold[1]] = 0
+                coeffs[1][abs(coeffs[1])>threshold[1]] = 0
+                coeffs[2][abs(coeffs[2])>threshold[1]] = 0  # level 8
+                coeffs[3][abs(coeffs[3])>threshold[1]] = 0  # level 7
+                coeffs[4][abs(coeffs[4])>threshold[1]] = 0  # level 6
+                coeffs[5][abs(coeffs[5])>threshold[1]] = 0  # level 5
+                coeffs[6][abs(coeffs[6])>threshold[1]] = 0  # level 4
+                coeffs[7][abs(coeffs[7])>threshold[1]] = 0  # level 3
+                coeffs[8][abs(coeffs[8])>threshold[1]] = 0
+                coeffs[9][abs(coeffs[9])>threshold[1]] = 0
+                return coeffs
+            arr_approx = apply_threshold_approx(coeffs,threshold)
+            arr_detail = apply_threshold_detail(coeffs,threshold)
+            arr_detail = list(np.array(arr_detail).T)
+            arr_approx = arr_approx
+            coefs = arr_detail
+            (coefs).insert(0,arr_approx)
+            return coefs
+
+        def inv_dwt(coeffs,wavelet):
+            def inverse_dwt(coeffs,wavelet):
+                return waverec(coeffs,wavelet)
+            arr = (inverse_dwt(list(np.array(coeffs,dtype=object)),wavelet))
+            return  (np.array(arr).T)[:-1]
+
+        coeffs = dwt(data,wavelet)
+        threshold_global = global_threshold(data,coeffs)
+        coeffs_global = apply_threshold(coeffs,threshold_global)
+        signal_global = inv_dwt(coeffs_global,wavelet)
+        return signal_global
+
+    newEEG_global = []
+    for i in range(len(wavelet)):
+        newEEG_global.append((dwt_only(data,wavelet[i])))
+    newEEG_global = np.array(newEEG_global).T
+    if len(newEEG_global) != len(time_array):
+        if len(newEEG_global) > len(time_array):
+            diff = len(newEEG_global) - len(time_array)
+            newEEG_global = newEEG_global[:-diff,:]
+        elif len(newEEG_global) < len(time_array):
+            diff = len(time_array) - len(newEEG_global)
+            num_zeros = np.zeros((diff,len(newEEG_global[1])))
+            newEEG_global = np.append(newEEG_global,num_zeros,axis=0)
+    else:
+        newEEG_global = newEEG_global
+    return newEEG_global
+
+def psdPlots(data,fs):
+# Define window length (4 seconds)
+    win = 4 * fs
+    freqs,psd = signal.welch(data,fs,nperseg=win)
+
+    # Plot the power spectrum
+    sns.set(font_scale=1.2, style='white')
+    plt.figure(figsize=(8, 4))
+    plt.plot(freqs, psd, color='k', lw=2)
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Power spectral density (V^2 / Hz)')
+    plt.ylim([0,0.003])
+    plt.xlim([0,200])
+    plt.xticks(np.arange(0,200,10))
+    plt.title("Welch's periodogram")
+    #plt.xlim([0, freqs.max()])
+    sns.despine()
