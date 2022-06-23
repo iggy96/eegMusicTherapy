@@ -7,6 +7,7 @@ databaseName = 'music_therapy_eeg'
 
 # eeg preprocessing parameters
 tuneval = 3
+wavelet = ['sym3']
 fs = 256
 collection_time = 120
 fs_setting = 'resample'
@@ -17,13 +18,13 @@ noChannels = 4
 line = 60
 Q = 30
 lowcut = 0.1
-highcut = 30
+highcut = 100
 order = 4
 win = fs # 4*fs = 1024
-# 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) 2560&1280
+# 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) default: 2560&1280
 # step size = window size / 2
-window_size = 2560
-step_size = 1280
+window_size = 256
+step_size = 128
 nfft = 256
 noverlap = 128
 brainwaves = dict(delta = [0.5,4],theta = [4,8],alpha = [8,13],beta = [13,32],gamma = [32,100])
