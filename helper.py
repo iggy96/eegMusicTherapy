@@ -314,7 +314,7 @@ def averageBandPower(data,arrayType,fs,low,high,win):
         freqs, psd = signal.welch(data,fs,nperseg=win)
         idx_freqBands = np.logical_and(freqs >= low, freqs <= high) 
         freq_res = freqs[1] - freqs[0]                                  
-        freqBand_power = round(simps(psd[idx_freqBands],dx=freq_res),3)      
+        freqBand_power = simps(psd[idx_freqBands],dx=freq_res)  
         return freqBand_power
     if arrayType=='2D':
         avgBandPower = []
@@ -380,9 +380,10 @@ def normalityTest(data):
             for i in range(len(result.critical_values)):
                 sl, cv = result.significance_level[i], result.critical_values[i]
                 if result.statistic < result.critical_values[i]:
-                    print('%.3f: %.3f, Anderson-Darling Test: data is normally distributed' % (sl, cv))
-        print ('\n'"Utilize Paired T-test to evaluate significance of data")        
-
+                    print('%.3f: %.3f, Anderson-Darling Test: data is normally distributed' % (sl, cv))    
+        test = "Paired T-test"  
+        print ('\n',test,"utilized to evaluate significance of data")  
+    
     if shapiro(data)[1] <= 0.05:
         pVal = shapiro(data)[1]
         print ("Shapiro Wilks Test: data is not normally distributed, P-Value=", pVal)
@@ -400,41 +401,67 @@ def normalityTest(data):
                 sl, cv = result.significance_level[i], result.critical_values[i]
                 if result.statistic > result.critical_values[i]:
                     print('%.3f: %.3f, Anderson-Darling Test: data is not normally distributed' % (sl, cv))
-        print ('\n'"Utilize non parametric methods e.g., Wilcoxon Signed Test etc., to evaluate significance of data")
-    pass
+        test = "Wilcoxon Signed Test"
+        print ('\n',test,"utilized to evaluate significance of data")  
+    return test
 
 
-def wilcoxonTest(data_1,data_2,show_output,variableName,channelName,alpha=0.05):
+def statTest(test_type,data_1,data_2,show_output,variableName,channelName,alpha=0.05):
     #   Inputs  :       data_1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #                   data_2   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #   Output  :       2D array (d0 = samples, d1 = channels) of paired t-test results
     #   wilcoxon Test:  P < 0.05 : significance difference exists
     #                   P > 0.05 : no significance difference exists
     #   SD           :  Signficant difference between the two groups
-
-    def initializeTest(data_1,data_2,variableName,channelName):
-        stat_test_1 = (wilcoxon(data_1,data_2))[1]
-        if show_output==True:
-            if stat_test_1 < alpha:
-                if np.mean(data_1)-np.mean(data_2)<0:
-                    print("{} | {} | P-value = {} | SD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
-                elif np.mean(data_1)-np.mean(data_2)>0:
-                    print("{} | {} | P-value = {} | SD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
+    if test_type == 'Wilcoxon Signed Test': 
+        def initializeTest(data_1,data_2,variableName,channelName):
+            stat_test_1 = (wilcoxon(data_1,data_2))[1]
+            if show_output==True:
+                if stat_test_1 < alpha:
+                    if np.mean(data_1)-np.mean(data_2)<0:
+                        print("{} | {} | P-value = {} | SD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
+                    elif np.mean(data_1)-np.mean(data_2)>0:
+                        print("{} | {} | P-value = {} | SD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
+                else:
+                    if np.mean(data_1)-np.mean(data_2)<0:
+                        print("{} | {} | P-value = {} | NSD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
+                    elif np.mean(data_1)-np.mean(data_2)>0:
+                        print("{} | {} | P-value = {} | NSD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
             else:
-                if np.mean(data_1)-np.mean(data_2)<0:
-                    print("{} | {} | P-value = {} | NSD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
-                elif np.mean(data_1)-np.mean(data_2)>0:
-                    print("{} | {} | P-value = {} | NSD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
-        else:
+                return stat_test_1
             return stat_test_1
-        return stat_test_1
 
-    stat_test_3 = []
-    for i in range(len(data_1.T)):
-        stat_test_2 = initializeTest(data_1[:,i],data_2[:,i],variableName,channelName[i])
-        stat_test_3.append(stat_test_2)
-    stat_test_3 = np.array(stat_test_3).T
-    print("\n")
+        stat_test_3 = []
+        for i in range(len(data_1.T)):
+            stat_test_2 = initializeTest(data_1[:,i],data_2[:,i],variableName,channelName[i])
+            stat_test_3.append(stat_test_2)
+        stat_test_3 = np.array(stat_test_3).T
+        print("\n")
+
+    elif test_type == 'Paired T-test':
+        def initializeTest(data_1,data_2,variableName,channelName):
+            stat_test_1 = (stats.ttest_rel(data_1,data_2))[1]
+            if show_output==True:
+                if stat_test_1 < alpha:
+                    if np.mean(data_1)-np.mean(data_2)<0:
+                        print("{} | {} | P-value = {} | SD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
+                    elif np.mean(data_1)-np.mean(data_2)>0:
+                        print("{} | {} | P-value = {} | SD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
+                else:
+                    if np.mean(data_1)-np.mean(data_2)<0:
+                        print("{} | {} | P-value = {} | NSD | mean increase".format(variableName,channelName,round(stat_test_1,5)))
+                    elif np.mean(data_1)-np.mean(data_2)>0:
+                        print("{} | {} | P-value = {} | NSD | mean decrease".format(variableName,channelName,round(stat_test_1,5)))
+            else:
+                return stat_test_1
+            return stat_test_1
+        
+        stat_test_3 = []
+        for i in range(len(data_1.T)):
+            stat_test_2 = initializeTest(data_1[:,i],data_2[:,i],variableName,channelName[i])
+            stat_test_3.append(stat_test_2)
+        stat_test_3 = np.array(stat_test_3).T
+        print("\n")
     return stat_test_3
 
 
