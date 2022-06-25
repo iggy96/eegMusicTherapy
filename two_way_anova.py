@@ -1,48 +1,104 @@
 
 #`` Importing libraries
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
-import numpy as np
-import pandas as pd
-
-# Create a dataframe
-dataframe = pd.DataFrame({'Fertilizer': np.repeat(['daily', 'weekly'], 15),
-						'Watering': np.repeat(['daily', 'weekly'], 15),
-                        'Temperature': np.repeat(['high', 'low'], 15),
-						'height': [14, 16, 15, 15, 16, 13, 12, 11,
-									14, 15, 16, 16, 17, 18, 14, 13,
-									14, 14, 14, 15, 16, 16, 17, 18,
-									14, 13, 14, 14, 14, 15]})
+from helper import*
+from params import*
 
 
-# Performing two-way ANOVA
-model = ols('height ~ C(Fertilizer) + C(Watering) + C(Temperature) +\
-C(Fertilizer):C(Watering):C(Temperature)',
-			data=dataframe).fit()
-result = sm.stats.anova_lm(model, type=3)
+# import csv files
+delta_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/delta_TP9_result.csv')
+delta_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/delta_AF7_result.csv')
+delta_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/delta_AF8_result.csv')
+delta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/delta_TP10_result.csv')
+delta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/delta_mean_result.csv')
 
-# Print the result
-print(result)
-"""
-independent_variable = ['Fertilizer', 'Watering']
-dependent_variable = 'height'
-string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + \C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')'
-print(string)
-"""
+theta_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_TP9_result.csv')
+theta_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_AF7_result.csv')
+theta_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_AF8_result.csv')
+theta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_TP10_result.csv')
+theta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_mean_result.csv')
 
-def anova(dataframe,anova_type,independent_variable,dependent_variable):
-    if anova_type==2:
-        string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + \
-            C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')'
-        model = ols(string,data=dataframe).fit()
-        result = sm.stats.anova_lm(model, type=2)
-        print(result)
-    elif anova_type==3:
-        string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[2] + ') + \
-            C(' + independent_variable[0] + '):C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')'
-        model = ols(string,data=dataframe).fit()
-        result = sm.stats.anova_lm(model, type=3)
-        print(result)
-    return result
+alpha_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_TP9_result.csv')
+alpha_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_AF7_result.csv')
+alpha_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_AF8_result.csv')
+alpha_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_TP10_result.csv')
+alpha_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_mean_result.csv')
 
-test = anova(dataframe,anova_type=3,independent_variable=['Fertilizer', 'Watering','Temperature'],dependent_variable='height')
+beta_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/beta_TP9_result.csv')
+beta_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/beta_AF7_result.csv')
+beta_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/beta_AF8_result.csv')
+beta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/beta_TP10_result.csv')
+beta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/beta_mean_result.csv')
+
+gamma_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/gamma_TP9_result.csv')
+gamma_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/gamma_AF7_result.csv')
+gamma_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/gamma_AF8_result.csv')
+gamma_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/gamma_TP10_result.csv')
+gamma_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/gamma_mean_result.csv')
+
+theta_beta_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_beta_TP9_result.csv')
+theta_beta_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_beta_AF7_result.csv')
+theta_beta_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_beta_AF8_result.csv')
+theta_beta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_beta_TP10_result.csv')
+theta_beta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/theta_beta_mean_result.csv')
+
+alpha_beta_TP9 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_TP9_result.csv')
+alpha_beta_AF7 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_AF7_result.csv')
+alpha_beta_AF8 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_AF8_result.csv')
+alpha_beta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_TP10_result.csv')
+alpha_beta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_mean_result.csv')
+
+
+#   run anova
+
+#   delta
+anova_delta_TP9 = anova(anova_title='DELTA TP9',dataframe=delta_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_delta_AF7 = anova(anova_title='DELTA AF7',dataframe=delta_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_delta_AF8 = anova(anova_title='DELTA AF8',dataframe=delta_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_delta_TP10 = anova(anova_title='DELTA TP10',dataframe=delta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_delta_mean = anova(anova_title='DELTA MEAN',dataframe=delta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   theta
+anova_theta_TP9 = anova(anova_title='THETA TP9',dataframe=theta_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_AF7 = anova(anova_title='THETA AF7',dataframe=theta_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_AF8 = anova(anova_title='THETA AF8',dataframe=theta_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_TP10 = anova(anova_title='THETA TP10',dataframe=theta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_mean = anova(anova_title='THETA MEAN',dataframe=theta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   alpha
+anova_alpha_TP9 = anova(anova_title='ALPHA TP9',dataframe=alpha_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_AF7 = anova(anova_title='ALPHA AF7',dataframe=alpha_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_AF8 = anova(anova_title='ALPHA AF8',dataframe=alpha_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_TP10 = anova(anova_title='ALPHA TP10',dataframe=alpha_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_mean = anova(anova_title='ALPHA MEAN',dataframe=alpha_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   beta
+anova_beta_TP9 = anova(anova_title='BETA TP9',dataframe=beta_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_beta_AF7 = anova(anova_title='BETA AF7',dataframe=beta_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_beta_AF8 = anova(anova_title='BETA AF8',dataframe=beta_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_beta_TP10 = anova(anova_title='BETA TP10',dataframe=beta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_beta_mean = anova(anova_title='BETA MEAN',dataframe=beta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   gamma
+anova_gamma_TP9 = anova(anova_title='GAMMA TP9',dataframe=gamma_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_gamma_AF7 = anova(anova_title='GAMMA AF7',dataframe=gamma_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_gamma_AF8 = anova(anova_title='GAMMA AF8',dataframe=gamma_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_gamma_TP10 = anova(anova_title='GAMMA TP10',dataframe=gamma_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_gamma_mean = anova(anova_title='GAMMA MEAN',dataframe=gamma_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   theta_beta
+anova_theta_beta_TP9 = anova(anova_title='THETA-BETA TP9',dataframe=theta_beta_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_beta_AF7 = anova(anova_title='THETA-BETA AF7',dataframe=theta_beta_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_beta_AF8 = anova(anova_title='THETA-BETA AF8',dataframe=theta_beta_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_beta_TP10 = anova(anova_title='THETA-BETA TP10',dataframe=theta_beta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_theta_beta_mean = anova(anova_title='THETA-BETA MEAN',dataframe=theta_beta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+#   alpha_beta
+anova_alpha_beta_TP9 = anova(anova_title='ALPHA-BETA TP9',dataframe=alpha_beta_TP9,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_beta_AF7 = anova(anova_title='ALPHA-BETA AF7',dataframe=alpha_beta_AF7,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_beta_AF8 = anova(anova_title='ALPHA-BETA AF8',dataframe=alpha_beta_AF8,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_beta_TP10 = anova(anova_title='ALPHA-BETA TP10',dataframe=alpha_beta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+anova_alpha_beta_mean = anova(anova_title='ALPHA-BETA MEAN',dataframe=alpha_beta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency')
+
+# anova plots
+
+
