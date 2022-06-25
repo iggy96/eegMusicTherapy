@@ -16,3 +16,5 @@ from scipy.stats import shapiro,wilcoxon,anderson
 from pywt import wavedec
 from pywt import waverec
 import seaborn as sns
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
