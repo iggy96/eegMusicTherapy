@@ -561,3 +561,17 @@ def psdPlots(data,fs):
     plt.title("Welch's periodogram")
     #plt.xlim([0, freqs.max()])
     sns.despine()
+
+
+
+def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable):
+    print(anova_title)
+    if anova_type==2:
+        string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')'  
+    elif anova_type==3:
+        string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[2] + ') + C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[2]+')+ C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')'
+    model = ols(string,data=dataframe).fit()
+    result = sm.stats.anova_lm(model, type=anova_type)
+    print(result)
+    print('\n')
+    return result,model
