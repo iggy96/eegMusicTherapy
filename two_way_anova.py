@@ -48,6 +48,7 @@ alpha_beta_TP10 = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/W
 alpha_beta_mean = pd.read_csv('/Users/joshuaighalo/Documents/BrainNet/Projects/Workspace/results/music therapy/alpha_beta_mean_result.csv')
 
 
+
 #   run anova
 
 #   delta
@@ -99,7 +100,7 @@ anova_alpha_beta_AF8 = anova(anova_title='ALPHA-BETA AF8',dataframe=alpha_beta_A
 anova_alpha_beta_TP10 = anova(anova_title='ALPHA-BETA TP10',dataframe=alpha_beta_TP10,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency',alphaAnova=alpha_anova,alphaPostHoc=alpha_posthoc)
 anova_alpha_beta_mean = anova(anova_title='ALPHA-BETA MEAN',dataframe=alpha_beta_mean,anova_type=3,independent_variable=['group','task','time'],dependent_variable='frequency',alphaAnova=alpha_anova,alphaPostHoc=alpha_posthoc)
 
-# anova plots
+
 
 
 
