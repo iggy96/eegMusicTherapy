@@ -564,14 +564,151 @@ def psdPlots(data,fs):
 
 
 
-def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable):
-    print(anova_title)
+def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable,alphaAnova,alphaPostHoc):
+    
     if anova_type==2:
+        print('ANOVA RESULT:',anova_title)
         string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')'  
+        model = ols(string,data=dataframe).fit()
+        result = sm.stats.anova_lm(model, type=anova_type)
+        filter_ = (result['PR(>F)'] <= alphaAnova)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant interaction')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT:',anova_title)
+        print('\n')
+        print("Main Effect of " + independent_variable[0] + ":")
+        res = stat()
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[0], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("Main Effect of " + independent_variable[1] + ":")
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[1], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[1] + ':')
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[1]], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
     elif anova_type==3:
+        print('ANOVA RESULT:',anova_title)
         string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[2] + ') + C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[2]+')+ C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')'
-    model = ols(string,data=dataframe).fit()
-    result = sm.stats.anova_lm(model, type=anova_type)
-    print(result)
-    print('\n')
-    return result,model
+        model = ols(string,data=dataframe).fit()
+        result = sm.stats.anova_lm(model, type=anova_type)
+        filter_ = (result['PR(>F)'] <= alphaAnova)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant interaction')
+        else:
+            print(result)
+        print('\n') 
+
+        print('POST HOC RESULT:',anova_title)
+        print("Main Effect of " + independent_variable[0] + ":")
+        res = stat()
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[0], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("Main Effect of " + independent_variable[1] + ":")
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[1], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("Main Effect of " + independent_variable[2] + ":")
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[2], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[1] + ':')
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[1]], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[2] + ':')
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[2]], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('Interaction Effects between ' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[1],independent_variable[2]], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
+        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[1],independent_variable[2]], anova_model=string)
+        result = res.tukey_summary
+        filter_ = (result['p-value'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('\n')
+    return result[filter_]
+
+
+
