@@ -29,6 +29,10 @@ nfft = 256
 noverlap = 128
 brainwaves = dict(delta = [0.5,4],theta = [4,8],alpha = [8,13],beta = [13,32],gamma = [32,100])
 
+# statistics parameters
+alpha_anova = 0.05
+alpha_posthoc = 0.01
+
 # music therapy files
 musicTherapyGroup_1 = [['MH_01_ES1_task1','MH_02_ES1_task1','MH_04_ES1_task1','MH_07_ES1_task1','MH_09_ES1_task1','MH_10_ES1_task1'],
                         ['MH_01_ES1_task2','MH_02_ES1_task2','MH_04_ES1_task2','MH_07_ES1_task2','MH_09_ES1_task2','MH_10_ES1_task2'],
