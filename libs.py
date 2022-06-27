@@ -22,3 +22,4 @@ from statsmodels.graphics.factorplots import interaction_plot
 from random import randint
 import collections
 from bioinfokit.analys import stat
+import statsmodels.stats.multicomp as mc
