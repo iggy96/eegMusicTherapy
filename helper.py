@@ -629,11 +629,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n') 
 
         print('POST HOC RESULT:',anova_title)
-        print("Main Effect of " + independent_variable[0] + ":")
-        res = stat()
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[0], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[0]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -642,9 +644,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print("Main Effect of " + independent_variable[1] + ":")
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[1], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[1]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -653,9 +659,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print("Main Effect of " + independent_variable[2] + ":")
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=independent_variable[2], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -664,9 +674,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print('Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[1] + ':')
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[1]], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -675,9 +689,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print('Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[2] + ':')
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[2]], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -686,9 +704,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print('Interaction Effects between ' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[1],independent_variable[2]], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -697,9 +719,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print('Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
-        res.tukey_hsd(df=dataframe, res_var=dependent_variable, xfac_var=[independent_variable[0],independent_variable[1],independent_variable[2]], anova_model=string)
-        result = res.tukey_summary
-        filter_ = (result['p-value'] <= alphaPostHoc)
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
         if result.empty == True:
             print('no significant effect')
@@ -708,7 +734,23 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
 
         print('\n')
-    return result[filter_]
+
+    return result
 
 
 
+def test(dataframe,independent_variable,dependent_variable,alphaPostHoc):
+    interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+    comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+    post_hoc_res = comp.tukeyhsd()
+    result = post_hoc_res.summary()
+    results_as_html = result.as_html()
+    result = pd.read_html(results_as_html)[0]
+    filter_ = (result['p-adj'] <= alphaPostHoc)
+    result = result[filter_]
+    if result.empty == True:
+        print('no significant effect')
+    else:
+        print(result)
+    print('\n')
+    return result
