@@ -356,7 +356,6 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
         axs
     fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
 
-
 def normalityTest(data):
     #   Inputs  :   difference between data from two timepoints 
     #   Output  :   result of normality test (p-value test)
@@ -404,7 +403,6 @@ def normalityTest(data):
         test = "Wilcoxon Signed Test"
         print ('\n',test,"utilized to evaluate significance of data")  
     return test
-
 
 def statTest(test_type,data_1,data_2,show_output,variableName,channelName,alpha=0.05):
     #   Inputs  :       data_1   - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
@@ -463,7 +461,6 @@ def statTest(test_type,data_1,data_2,show_output,variableName,channelName,alpha=
         stat_test_3 = np.array(stat_test_3).T
         print("\n")
     return stat_test_3
-
 
 def singleChannelDWT(data,time_array,wavelet):
     #   Probability Mapping Based Artifact Detection and Wavelet Denoising based 
@@ -562,8 +559,6 @@ def psdPlots(data,fs):
     #plt.xlim([0, freqs.max()])
     sns.despine()
 
-
-
 def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable,alphaAnova,alphaPostHoc):
     
     if anova_type==2:
@@ -617,7 +612,7 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
 
     elif anova_type==3:
         print('ANOVA RESULT:',anova_title)
-        string = dependent_variable + ' ~ ' +'C(' + independent_variable[0] + ') + C(' + independent_variable[1] + ') + C(' + independent_variable[2] + ') + C(' + independent_variable[0] + '):C(' + independent_variable[1] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[2]+')+ C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')+ C(' + independent_variable[0] + '):C(' + independent_variable[1] + '):C(' + independent_variable[2] + ')'
+        string = dependent_variable + ' ~ ' +'(' + independent_variable[0] + ') + (' + independent_variable[1] + ') + (' + independent_variable[2] + ') + (' + independent_variable[0] + '):(' + independent_variable[1] + ')+ (' + independent_variable[0] + '):(' + independent_variable[2]+')+ (' + independent_variable[1] + '):(' + independent_variable[2] + ')+ (' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[2] + ')'
         model = ols(string,data=dataframe).fit()
         result = sm.stats.anova_lm(model, type=anova_type)
         filter_ = (result['PR(>F)'] <= alphaAnova)
@@ -735,22 +730,246 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
 
         print('\n')
 
-    return result
-
-
-
-def test(dataframe,independent_variable,dependent_variable,alphaPostHoc):
-    interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
-    comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
-    post_hoc_res = comp.tukeyhsd()
-    result = post_hoc_res.summary()
-    results_as_html = result.as_html()
-    result = pd.read_html(results_as_html)[0]
-    filter_ = (result['p-adj'] <= alphaPostHoc)
-    result = result[filter_]
-    if result.empty == True:
-        print('no significant effect')
-    else:
+    elif anova_type==4:
+        print('ANOVA RESULT:',anova_title)
+        string = dependent_variable + ' ~ ' +'(' + independent_variable[0] + ') + (' + independent_variable[1] + ') + (' + independent_variable[2] + ') + (' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + ')+ (' + independent_variable[0] + '):(' + independent_variable[2]+') + (' + independent_variable[1] + '):(' + independent_variable[2] + ')+ (' + independent_variable[0] + '):(' + independent_variable[3] + ')+(' + independent_variable[1] + '):(' + independent_variable[3] + ')+(' + independent_variable[2] + '):(' + independent_variable[3] + ')+(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[2] + ') + (' + independent_variable[0] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ') + (' + independent_variable[1] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ')'
+        model = ols(string,data=dataframe).fit()
+        result = sm.stats.anova_lm(model, type=anova_type)
+        #filter_ = (result['PR(>F)'] <= alphaAnova)
+        #result = result[filter_]
+        #if result.empty == True:
+        #    print('no significant interaction')
+        #else:
+        #    print(result)
+        #print('\n') 
         print(result)
-    print('\n')
+        print('\n')
+        
+        print("POST HOC RESULT: Main Effect of " + independent_variable[0] + ":")
+        interaction_groups = dataframe[independent_variable[0]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("POST HOC RESULT: Main Effect of " + independent_variable[1] + ":")
+        interaction_groups = dataframe[independent_variable[1]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("POST HOC RESULT: Main Effect of " + independent_variable[2] + ":")
+        interaction_groups = dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print("POST HOC RESULT: Main Effect of " + independent_variable[3] + ":")
+        interaction_groups = dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[1] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[2] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
+        interaction_groups = dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[1] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[2] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[2]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ' and ' + independent_variable[2] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[2] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[1] + ',' + independent_variable[2] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        print('\n')
+        
+        print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ',' + independent_variable[2] + ' and ' + independent_variable[3] + ':')
+        interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
+        comp = mc.MultiComparison(dataframe[dependent_variable], interaction_groups)
+        post_hoc_res = comp.tukeyhsd()
+        result = post_hoc_res.summary()
+        results_as_html = result.as_html()
+        result = pd.read_html(results_as_html)[0]
+        filter_ = (result['p-adj'] <= alphaPostHoc)
+        result = result[filter_]
+        if result.empty == True:
+            print('no significant effect')
+        else:
+            print(result)
+        
+
+        print('\n')
     return result
+
