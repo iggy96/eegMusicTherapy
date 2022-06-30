@@ -735,6 +735,7 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         string = dependent_variable + ' ~ ' +'(' + independent_variable[0] + ') + (' + independent_variable[1] + ') + (' + independent_variable[2] + ') + (' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + ')+ (' + independent_variable[0] + '):(' + independent_variable[2]+') + (' + independent_variable[1] + '):(' + independent_variable[2] + ')+ (' + independent_variable[0] + '):(' + independent_variable[3] + ')+(' + independent_variable[1] + '):(' + independent_variable[3] + ')+(' + independent_variable[2] + '):(' + independent_variable[3] + ')+(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[2] + ') + (' + independent_variable[0] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ') + (' + independent_variable[1] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[3] + ') +(' + independent_variable[0] + '):(' + independent_variable[1] + '):(' + independent_variable[2] + '):(' + independent_variable[3] + ')'
         model = ols(string,data=dataframe).fit()
         result = sm.stats.anova_lm(model, type=anova_type)
+        result_anova = result
         #filter_ = (result['PR(>F)'] <= alphaAnova)
         #result = result[filter_]
         #if result.empty == True:
@@ -754,6 +755,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_main_1 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -769,6 +772,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_main_2 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -784,6 +789,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_main_3 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -799,6 +806,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_main_4 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -814,6 +823,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_1 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -829,6 +840,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_2 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -844,6 +857,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_3 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -859,6 +874,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_4 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -874,6 +891,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_5 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -889,6 +908,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_6 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -902,13 +923,17 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = post_hoc_res.summary()
         results_as_html = result.as_html()
         result = pd.read_html(results_as_html)[0]
-        filter_ = (result['p-adj'] <= alphaPostHoc)
-        result = result[filter_]
-        if result.empty == True:
-            print('no significant effect')
-        else:
-            print(result)
+        #filter_ = (result['p-adj'] <= alphaPostHoc)
+        #result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_7 = result
+        print(result_interaction_7)
         print('\n')
+        #if result.empty == True:
+        #    print('no significant effect')
+        #else:
+        #    print(result)
+        #print('\n')
 
         print('POST HOC RESULT: Interaction Effects between ' + independent_variable[0] + ',' + independent_variable[1] + ' and ' + independent_variable[3] + ':')
         interaction_groups = dataframe[independent_variable[0]].astype(str) + " & " + dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
@@ -919,6 +944,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_8 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -934,11 +961,13 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_9 = result
         if result.empty == True:
             print('no significant effect')
         else:
             print(result)
-        print('\n')
+        print('\n') 
 
         print('POST HOC RESULT: Interaction Effects between ' + independent_variable[1] + ',' + independent_variable[2] + ' and ' + independent_variable[3] + ':')
         interaction_groups = dataframe[independent_variable[1]].astype(str) + " & " + dataframe[independent_variable[2]].astype(str) + " & " + dataframe[independent_variable[3]].astype(str)
@@ -949,6 +978,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_10 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -964,6 +995,8 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         result = pd.read_html(results_as_html)[0]
         filter_ = (result['p-adj'] <= alphaPostHoc)
         result = result[filter_]
+        result.drop(result.columns[[6]], axis = 1, inplace = True)
+        result_interaction_11 = result
         if result.empty == True:
             print('no significant effect')
         else:
@@ -971,5 +1004,5 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         
 
         print('\n')
-    return result
+    return result_anova,result_main_1,result_main_2,result_main_3,result_main_4,result_interaction_1,result_interaction_2,result_interaction_3,result_interaction_4,result_interaction_5,result_interaction_6,result_interaction_7,result_interaction_8,result_interaction_9,result_interaction_10,result_interaction_11
 
