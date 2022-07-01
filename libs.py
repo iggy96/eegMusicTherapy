@@ -26,3 +26,5 @@ import statsmodels.stats.multicomp as mc
 import itertools
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas.plotting as pdplt
+import warnings
+warnings.filterwarnings("ignore")
