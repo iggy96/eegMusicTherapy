@@ -71,3 +71,4 @@ fn_print_pdf(anova_power_mean[13],pp)
 fn_print_pdf(anova_power_mean[14],pp)
 fn_print_pdf(anova_power_mean[15],pp)
 pp.close()
+
