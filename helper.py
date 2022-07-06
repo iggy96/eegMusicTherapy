@@ -15,7 +15,6 @@ def create_db_connection(host_name, user_name, user_password, database_name):
         print(f"Error: '{err}'")
     return connection
 
-
 def df_to_table_query(connection, query):
     # converts all sql queries user writes in python strings 
     # and passes it to cursor.execute() method to execute them
@@ -27,7 +26,6 @@ def df_to_table_query(connection, query):
     except Error as err:
         print(f"Error: '{err}'")
     return df
-
 
 def sqlTableToDataframe(host_name,user_name,user_password,database_name,query):
     dbConnection = create_db_connection(host_name,user_name,user_password,database_name)
@@ -45,7 +43,6 @@ def allSQLTableNames(hostName,userName,userPassword,databaseName):
     result = [x[0] for x in result]
     return result
 
-
 def multiSQLTablesToDataframes(hostName,userName,userPassword,databaseName,table_name):
     # Input: hostName,userName,userPassword,databaseName,table_name
     #        table_name is a list of all table names in database
@@ -61,7 +58,6 @@ def multiSQLTablesToDataframes(hostName,userName,userPassword,databaseName,table
         tables_.append(tableToDF(hostName,userName,userPassword,databaseName,table_name[i]))
     #tables_ = np.array(tables_,dtype=object)
     return tables_
-
 
 def singleTransformToRawEEG(data,fs,collection_time,fs_setting):
     #   Inputs  :   data    - one dataframe of unfiltered EEG data
@@ -80,7 +76,6 @@ def singleTransformToRawEEG(data,fs,collection_time,fs_setting):
         t_len = len(rawEEG)
         time_s = np.linspace(start=0, stop=collection_time, num=len(rawEEG))
     return rawEEG,time_s
-
 
 def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
     #   Inputs  :   data    -multiple dataframes of unfiltered EEG data
@@ -194,7 +189,6 @@ def plot_averageBandPower(groupA,groupB,x_labels,groups,figure_size,plot_title):
     plt.show()
     pass
 
-
 def plots(x,y,titles,figsize,pltclr):
     x_lim = [x[0],x[-1]]
     if len(y.T) % 2 != 0:
@@ -209,7 +203,6 @@ def plots(x,y,titles,figsize,pltclr):
         axs.set_xlim([x_lim[0],x_lim[1]])
         axs.set(xlabel='Time (s)', ylabel='Amplitude (uV)')
         axs.label_outer()
-
 
 class filters:
     # filters for EEG data
@@ -330,7 +323,6 @@ def averageBandPower(data,arrayType,fs,low,high,win):
         avgBandPower= np.array(avgBandPower)
         avgBandPower = avgBandPower.reshape(len(x),len(data))
     return avgBandPower
-
 
 def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
