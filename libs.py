@@ -16,15 +16,15 @@ from scipy.stats import shapiro,wilcoxon,anderson
 from pywt import wavedec
 from pywt import waverec
 import seaborn as sns
-import statsmodels.api as sm
+#import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from statsmodels.graphics.factorplots import interaction_plot
 from random import randint
 import collections
-from bioinfokit.analys import stat
+#from bioinfokit.analys import stat
 import statsmodels.stats.multicomp as mc
 import itertools
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas.plotting as pdplt
-import warnings
-warnings.filterwarnings("ignore")
+#import warnings
+#warnings.filterwarnings("ignore")
