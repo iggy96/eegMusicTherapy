@@ -238,6 +238,21 @@ class filters:
         y = sosfiltfilt(sos, data, axis=0)
         return y
 
+    def butter_lowpass(self,data,cutoff,fs,order):
+        nyq = 0.5 * fs
+        normal_cutoff = cutoff / nyq
+        b, a = signal.butter(order, normal_cutoff, btype='low', analog=False)
+        y = signal.lfilter(b, a, data)
+        return y
+
+    def butter_highpass(self,data,cutoff,fs,order):
+        nyq = 0.5 * fs
+        normal_cutoff = cutoff / nyq
+        b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+        y = signal.filtfilt(b, a, data)
+        return y
+
+        
 def rollingWindow(array,window_size,freq):
     #   Inputs  :   array    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               window_size - size of window to be used for sliding
