@@ -273,7 +273,7 @@ def rollingWindow(array,window_size,freq):
 def customICA(input,tuneVal):
     # algorithm uses ICA to split the eeg into components to allow for easy extraction of ocular artefacts
     # Using the idea of the ASR algorithm, the tuneVal is the number of STD above the mean
-    # eeg elements that fall into the class above the mean are artefactsa and replaced with 
+    # eeg elements that fall into the class above the mean are artefacts and replaced with 
     # the mean value of non-artefact elements
     val = tuneVal
     ica = FastICA(len(input.T),max_iter=200,tol=0.0001,random_state=0)
@@ -559,9 +559,9 @@ def psdPlots(data,fs):
     plt.plot(freqs, psd, color='k', lw=2)
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Power spectral density (V^2 / Hz)')
-    plt.ylim([0,0.003])
-    plt.xlim([0,200])
-    plt.xticks(np.arange(0,200,10))
+    #plt.ylim([0,0.003])
+    #plt.xlim([0,200])
+    #plt.xticks(np.arange(0,200,10))
     plt.title("Welch's periodogram")
     #plt.xlim([0, freqs.max()])
     sns.despine()
