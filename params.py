@@ -23,8 +23,8 @@ order = 4
 win = fs # 4*fs = 1024
 # 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) 256 (1-second) default: 2560&1280
 # step size = window size / 2
-window_size = 2560
-step_size = 1280
+window_size = 5120
+step_size = 256
 nfft = 256
 noverlap = 128
 brainwaves = dict(delta = [0.5,4],theta = [4,8],alpha = [8,13],beta = [13,32],gamma = [32,100])
