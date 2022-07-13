@@ -496,8 +496,9 @@ def singleChannelDWT(data,time_array,wavelet):
 
         def apply_threshold(coeffs,threshold):
             def apply_threshold_approx(coeffs,threshold):
-                coeffs[0][abs(coeffs[0])>threshold[1]] = 0
-                coeffs_approx = coeffs[0]
+                #coeffs[0][abs(coeffs[0])>threshold[1]] = 0
+                #coeffs_approx = coeffs[0]
+                coeffs_approx = np.zeros(len(coeffs[0]))
                 return coeffs_approx
             def apply_threshold_detail(coeffs,threshold):
                 coeffs = coeffs[1:len(coeffs)]
