@@ -1,3 +1,4 @@
+from statistics import mode
 from libs import*
 
 def create_db_connection(host_name, user_name, user_password, database_name):
@@ -221,7 +222,7 @@ class filters:
         y = signal.filtfilt(b, a, data, axis=0)
         return y
 
-    def butterBandPass(self,data,lowcut,highcut,fs,order):
+    def butterBandPass(self,data,lowcut,highcut,fs,order=4):
         #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
         #               low     - lower limit in Hz for the bandpass filter (defaults to config)
         #               high    - upper limit in Hz for the bandpass filter (defaults to config)
@@ -355,13 +356,16 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     fig.suptitle(title)
     label= ["Power/Frequency"]
     for i, axs in enumerate(axs.flatten()):
-        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
+        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap,mode='psd',scale='dB')
         axs.set_title(subTitles[i])
         axs.set_ylim(0,80)
         axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
         axs.label_outer()
         axs
-    fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
+    cbar = plt.colorbar(im, ax=axs)
+    cbar.set_label('Amplitude (dB)')
+    cbar.minorticks_on()
+    #fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
 
 def normalityTest(data):
     #   Inputs  :   difference between data from two timepoints 
@@ -549,23 +553,22 @@ def singleChannelDWT(data,time_array,wavelet):
         newEEG_global = newEEG_global
     return newEEG_global
 
-def psdPlots(data,fs):
+def psdPlots(data,fs,title):
 # Define window length (4 seconds)
     win = 4 * fs
     freqs,psd = signal.welch(data,fs,nperseg=win)
-
-    # Plot the power spectrum
     sns.set(font_scale=1.2, style='white')
     plt.figure(figsize=(8, 4))
     plt.plot(freqs, psd, color='k', lw=2)
     plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Power spectral density (V^2 / Hz)')
-    #plt.ylim([0,0.003])
+    plt.ylabel('Power spectral density (dB / Hz)')
+    #plt.ylim([0,0.1])
     #plt.xlim([0,200])
     #plt.xticks(np.arange(0,200,10))
-    plt.title("Welch's periodogram")
+    plt.title(title)
     #plt.xlim([0, freqs.max()])
     sns.despine()
+    
 
 def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable,alphaAnova,alphaPostHoc):
     
