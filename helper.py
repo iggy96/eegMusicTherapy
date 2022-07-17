@@ -562,7 +562,7 @@ def psdPlots(data,fs,title):
     plt.plot(freqs, psd, color='k', lw=2)
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Power spectral density (dB / Hz)')
-    #plt.ylim([0,0.1])
+    #plt.ylim([0,0.0001])
     #plt.xlim([0,200])
     #plt.xticks(np.arange(0,200,10))
     plt.title(title)
