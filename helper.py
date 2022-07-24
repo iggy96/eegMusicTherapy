@@ -76,6 +76,18 @@ def singleTransformToRawEEG(data,fs,collection_time,fs_setting):
         rawEEG = rawEEG.to_numpy()
         t_len = len(rawEEG)
         time_s = np.linspace(start=0, stop=collection_time, num=len(rawEEG))
+    if len(rawEEG) == int(collection_time*fs):
+        rawEEG = rawEEG
+    if len(rawEEG) > int(collection_time*fs):
+        rawEEG = rawEEG[0:int(collection_time*fs)]
+    if len(rawEEG) < int(collection_time*fs):
+        l = len(rawEEG)
+        while l < int(collection_time*fs):
+            mean = np.mean(rawEEG,axis=0)
+            mean = mean.reshape(1,len(mean))
+            rawEEG = np.vstack((rawEEG,mean))
+            if len(rawEEG) == int(collection_time*fs):
+                break
     return rawEEG,time_s
 
 def multiTransformTableToRawEEG(data,fs,collection_time,fs_setting):
@@ -190,13 +202,13 @@ def plot_averageBandPower(groupA,groupB,x_labels,groups,figure_size,plot_title):
     plt.show()
     pass
 
-def plots(x,y,titles,figsize,pltclr):
+def plots(x,y,titles,pltclr):
     x_lim = [x[0],x[-1]]
     if len(y.T) % 2 != 0:
         nrows,ncols=1,int(len(y.T))
     elif len(y.T) % 2 == 0:
         nrows,ncols=2,int(len(y.T)/2)
-    fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
+    fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(15,8))
     for i, axs in enumerate(axs.flatten()):
         axs.plot(x, y[:,i], color=pltclr[i])
         axs.set_title(titles[i])
@@ -208,7 +220,7 @@ def plots(x,y,titles,figsize,pltclr):
 class filters:
     # filters for EEG data
     # filtering order: adaptive filter -> notch filter -> bandpass filter (or lowpass filter, highpass filter)
-    def notch(self,data,line,fs,Q):
+    def notch(self,data,line,fs,iterations):
         #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
         #               cut     - frequency to be notched (defaults to config)
         #               fs      - sampling rate of hardware (defaults to config)
@@ -216,11 +228,16 @@ class filters:
         #   Output  :   y     - 2D numpy array (d0 = samples, d1 = channels) of notch-filtered EEG data
         #   NOTES   :   
         #   Todo    : report testing filter characteristics
-        cut = line
-        w0 = cut/(fs/2)
-        b, a = signal.iirnotch(w0, Q)
-        y = signal.filtfilt(b, a, data, axis=0)
-        return y
+        def fn(data,line,fs,Q=30):
+            cut = line
+            w0 = cut/(fs/2)
+            b, a = signal.iirnotch(w0, Q)
+            y = signal.filtfilt(b, a, data, axis=0)
+            return y
+        output = fn(data,line,fs)
+        for i in range(iterations):
+            output = fn(output,line,fs)
+        return output
 
     def butterBandPass(self,data,lowcut,highcut,fs,order=4):
         #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
@@ -239,6 +256,45 @@ class filters:
         y = sosfiltfilt(sos, data, axis=0)
         return y
 
+    def adaptive(self,eegData,eogData,nKernel=5, forgetF=0.995,  startSample=0, p = False):
+        """
+           Inputs:
+           eegData - A matrix containing the EEG data to be filtered here each channel is a column in the matrix, and time
+           starts at the top row of the matrix. i.e. size(data) = [numSamples,numChannels]
+           eogData - A matrix containing the EOG data to be used in the adaptive filter
+           startSample - the number of samples to skip for the calculation (i.e. to avoid the transient)
+           p - plot AF response (default false)
+           nKernel = Dimension of the kernel for the adaptive filter
+           Outputs:
+           cleanData - A matrix of the same size as "eegdata", now containing EOG-corrected EEG data.
+           Adapted from He, Ping, G. Wilson, and C. Russell. "Removal of ocular artifacts from electro-encephalogram by adaptive filtering." Medical and biological engineering and computing 42.3 (2004): 407-412.
+        """
+        #   reshape eog array if necessary
+        if len(eogData.shape) == 1:
+            eogData = np.reshape(eogData, (eogData.shape[0], 1))
+        # initialise Recursive Least Squares (RLS) filter state
+        nEOG = eogData.shape[1]
+        nEEG = eegData.shape[1]
+        hist = np.zeros((nEOG, nKernel))
+        R_n = np.identity(nEOG * nKernel) / 0.01
+        H_n = np.zeros((nEOG * nKernel, nEEG))
+        X = np.hstack((eegData, eogData)).T          # sort EEG and EOG channels, then transpose into row variables
+        eegIndex = np.arange(nEEG)                              # index of EEG channels within X
+        eogIndex = np.arange(nEOG) + eegIndex[-1] + 1           # index of EOG channels within X
+        for n in range(startSample, X.shape[1]):
+            hist = np.hstack((hist[:, 1:], X[eogIndex, n].reshape((nEOG, 1))))  # update the EOG history by feeding in a new sample
+            tmp = hist.T                                                        # make it a column variable again (?)
+            r_n = np.vstack(np.hsplit(tmp, tmp.shape[-1]))
+            K_n = np.dot(R_n, r_n) / (forgetF + np.dot(np.dot(r_n.T, R_n), r_n))                                           # Eq. 25
+            R_n = np.dot(np.power(forgetF, -1),R_n) - np.dot(np.dot(np.dot(np.power(forgetF, -1), K_n), r_n.T), R_n)       #Update R_n
+            s_n = X[eegIndex, n].reshape((nEEG, 1))                   #get EEG signal and make sure it's a 1D column array
+            e_nn = s_n - np.dot(r_n.T, H_n).T  #Eq. 27
+            H_n = H_n + np.dot(K_n, e_nn.T)
+            e_n = s_n - np.dot(r_n.T, H_n).T
+            X[eegIndex, n] = np.squeeze(e_n)
+        cleanData = X[eegIndex, :].T
+        return cleanData
+
     def butter_lowpass(self,data,cutoff,fs,order):
         nyq = 0.5 * fs
         normal_cutoff = cutoff / nyq
@@ -252,8 +308,7 @@ class filters:
         b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
         y = signal.filtfilt(b, a, data)
         return y
-
-        
+       
 def rollingWindow(array,window_size,freq):
     #   Inputs  :   array    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               window_size - size of window to be used for sliding
@@ -365,7 +420,6 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     cbar = plt.colorbar(im, ax=axs)
     cbar.set_label('Amplitude (dB)')
     cbar.minorticks_on()
-    #fig.colorbar(im, ax=axs, shrink=0.9, aspect=10)
 
 def normalityTest(data):
     #   Inputs  :   difference between data from two timepoints 
@@ -553,23 +607,28 @@ def singleChannelDWT(data,time_array,wavelet):
         newEEG_global = newEEG_global
     return newEEG_global
 
-def psdPlots(data,fs,title):
+def psdPlots(data,fs,titles):
 # Define window length (4 seconds)
     win = 4 * fs
-    freqs,psd = signal.welch(data,fs,nperseg=win)
-    sns.set(font_scale=1.2, style='white')
-    plt.figure(figsize=(8, 4))
-    plt.plot(freqs, psd, color='k', lw=2)
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Power spectral density (dB / Hz)')
-    #plt.ylim([0,0.0001])
-    #plt.xlim([0,200])
-    #plt.xticks(np.arange(0,200,10))
-    plt.title(title)
-    #plt.xlim([0, freqs.max()])
-    sns.despine()
+    freqs_1,psd_1 = signal.welch(data[:,0],fs,nperseg=win)
+    freqs_2,psd_2 = signal.welch(data[:,1],fs,nperseg=win)
+    freqs_3,psd_3 = signal.welch(data[:,2],fs,nperseg=win)
+    freqs_4,psd_4 = signal.welch(data[:,3],fs,nperseg=win)
+    fig, axs = plt.subplots(2,2,figsize=(15,8))
+    axs[0, 0].plot(freqs_1,psd_1)
+    axs[0, 0].set_title(titles[0])
+    axs[0, 1].plot(freqs_2,psd_2, 'tab:orange')
+    axs[0, 1].set_title(titles[1])
+    axs[1, 0].plot(freqs_3,psd_3, 'tab:green')
+    axs[1, 0].set_title(titles[2])
+    axs[1, 1].plot(freqs_4,psd_4, 'tab:red')
+    axs[1, 1].set_title(titles[3])
+    for ax in axs.flat:
+        ax.set(xlabel='Frequency (Hz)', ylabel='PSD (dB/Hz)')
+    # Hide x labels and tick labels for top plots and y ticks for right plots.
+    for ax in axs.flat:
+        ax.label_outer()
     
-
 def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variable,alphaAnova,alphaPostHoc):
     
     if anova_type==2:
