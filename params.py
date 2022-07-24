@@ -11,14 +11,14 @@ wavelet = ['sym3']
 fs = 256
 collection_time = 120
 fs_setting = 'resample'
-plotTitles = ['RAW_TP9','RAW_AF7','RAW_AF8','RAW_TP10']
+channels = ['TP9','AF7','AF8','TP10']
 figSize = (6,6)
 pltColor = ['r','g','b','k']
 noChannels = 4
 line = 60
 Q = 30
 lowcut = 0.1
-highcut = 64
+highcut = 100
 order = 4
 win = fs # 4*fs = 1024
 # 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) 256 (1-second) default: 2560&1280
