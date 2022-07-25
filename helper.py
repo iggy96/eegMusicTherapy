@@ -1076,3 +1076,11 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
     return result_anova,result_main_1,result_main_2,result_main_3,result_main_4,result_interaction_1,result_interaction_2,result_interaction_3,result_interaction_4,result_interaction_5,result_interaction_6,result_interaction_7,result_interaction_8,result_interaction_9,result_interaction_10,result_interaction_11
 
+def bandPowerPlots(x,y,labels,colors,title):
+    for i in range(len(y)):
+        plt.plot(x,y[i],label=labels[i],color=colors[i])
+    plt.legend()
+    plt.title(title)
+    plt.xlabel('Channels')
+    plt.ylabel('Average Band Power')
+    plt.show()
