@@ -122,58 +122,38 @@ def multiChannelDWT(data,time_array,wavelet):
 def plot_averageBandPower(groupA,groupB,x_labels,groups,figure_size,plot_title):
     mean_groupA_11 = np.mean(groupA[0][0],axis=0)
     mean_groupA_12 = np.mean(groupA[0][1],axis=0)
-    mean_groupA_13 = np.mean(groupA[0][2],axis=0)
     mean_groupA_21 = np.mean(groupA[1][0],axis=0)
     mean_groupA_22 = np.mean(groupA[1][1],axis=0)
-    mean_groupA_23 = np.mean(groupA[1][2],axis=0)
     mean_groupB_11 = np.mean(groupB[0][0],axis=0)
     mean_groupB_12 = np.mean(groupB[0][1],axis=0)
-    mean_groupB_13 = np.mean(groupB[0][2],axis=0)
     mean_groupB_21 = np.mean(groupB[1][0],axis=0)
     mean_groupB_22 = np.mean(groupB[1][1],axis=0)
-    mean_groupB_23 = np.mean(groupB[1][2],axis=0)
     std_groupA_11 = np.std(groupA[0][0],axis=0)
     std_groupA_12 = np.std(groupA[0][1],axis=0)
-    std_groupA_13 = np.std(groupA[0][2],axis=0)
     std_groupA_21 = np.std(groupA[1][0],axis=0)
     std_groupA_22 = np.std(groupA[1][1],axis=0)
-    std_groupA_23 = np.std(groupA[1][2],axis=0)
     std_groupB_11 = np.std(groupB[0][0],axis=0)
     std_groupB_12 = np.std(groupB[0][1],axis=0)
-    std_groupB_13 = np.std(groupB[0][2],axis=0)
     std_groupB_21 = np.std(groupB[1][0],axis=0)
     std_groupB_22 = np.std(groupB[1][1],axis=0)
-    std_groupB_23 = np.std(groupB[1][2],axis=0)
 
     data_mean = np.array([[mean_groupA_11[0],mean_groupA_21[0],mean_groupB_11[0],mean_groupB_21[0]],
                             [mean_groupA_11[1],mean_groupA_21[1],mean_groupB_11[1],mean_groupB_21[1]],
                             [mean_groupA_11[2],mean_groupA_21[2],mean_groupB_11[2],mean_groupB_21[2]],
                             [mean_groupA_11[3],mean_groupA_21[3],mean_groupB_11[3],mean_groupB_21[3]],
-                            [0,0,0,0],
                             [mean_groupA_12[0],mean_groupA_22[0],mean_groupB_12[0],mean_groupB_22[0]],
                             [mean_groupA_12[1],mean_groupA_22[1],mean_groupB_12[1],mean_groupB_22[1]],
                             [mean_groupA_12[2],mean_groupA_22[2],mean_groupB_12[2],mean_groupB_22[2]],
-                            [mean_groupA_12[3],mean_groupA_22[3],mean_groupB_12[3],mean_groupB_22[3]],
-                            [0,0,0,0],
-                            [mean_groupA_13[0],mean_groupA_23[0],mean_groupB_13[0],mean_groupB_23[0]],
-                            [mean_groupA_13[1],mean_groupA_23[1],mean_groupB_13[1],mean_groupB_23[1]],
-                            [mean_groupA_13[2],mean_groupA_23[2],mean_groupB_13[2],mean_groupB_23[2]],
-                            [mean_groupA_13[3],mean_groupA_23[3],mean_groupB_13[3],mean_groupB_23[3]]])
+                            [mean_groupA_12[3],mean_groupA_22[3],mean_groupB_12[3],mean_groupB_22[3]]])
 
     data_std = np.array([[std_groupA_11[0],std_groupA_21[0],std_groupB_11[0],std_groupB_21[0]],
                             [std_groupA_11[1],std_groupA_21[1],std_groupB_11[1],std_groupB_21[1]],
                             [std_groupA_11[2],std_groupA_21[2],std_groupB_11[2],std_groupB_21[2]],
                             [std_groupA_11[3],std_groupA_21[3],std_groupB_11[3],std_groupB_21[3]],
-                            [0,0,0,0],
                             [std_groupA_12[0],std_groupA_22[0],std_groupB_12[0],std_groupB_22[0]],
                             [std_groupA_12[1],std_groupA_22[1],std_groupB_12[1],std_groupB_22[1]],
                             [std_groupA_12[2],std_groupA_22[2],std_groupB_12[2],std_groupB_22[2]],
-                            [std_groupA_12[3],std_groupA_22[3],std_groupB_12[3],std_groupB_22[3]],
-                            [0,0,0,0],
-                            [std_groupA_13[0],std_groupA_23[0],std_groupB_13[0],std_groupB_23[0]],
-                            [std_groupA_13[1],std_groupA_23[1],std_groupB_13[1],std_groupB_23[1]],
-                            [std_groupA_13[2],std_groupA_23[2],std_groupB_13[2],std_groupB_23[2]],
-                            [std_groupA_13[3],std_groupA_23[3],std_groupB_13[3],std_groupB_23[3]]])
+                            [std_groupA_12[3],std_groupA_22[3],std_groupB_12[3],std_groupB_22[3]]])
 
 
 
@@ -1076,11 +1056,118 @@ def anova(anova_title,dataframe,anova_type,independent_variable,dependent_variab
         print('\n')
     return result_anova,result_main_1,result_main_2,result_main_3,result_main_4,result_interaction_1,result_interaction_2,result_interaction_3,result_interaction_4,result_interaction_5,result_interaction_6,result_interaction_7,result_interaction_8,result_interaction_9,result_interaction_10,result_interaction_11
 
-def bandPowerPlots(x,y,labels,colors,title):
-    for i in range(len(y)):
-        plt.plot(x,y[i],label=labels[i],color=colors[i])
-    plt.legend()
+def bandpowerPlots(x,y,title,label):
+    fig=plt.figure()
+    fig.show()
+    ax=fig.add_subplot(111)
+    ax.plot(x,y[0],c='b',marker="^",ls='--',label=label[0],fillstyle='none')
+    ax.plot(x,y[1],c='g',marker=(8,2,0),ls='--',label=label[1])
+    ax.plot(x,y[2],c='r',marker="v",ls='-',label=label[2])
+    ax.plot(x,y[3],c='m',marker="o",ls='--',label=label[3],fillstyle='none')
     plt.title(title)
     plt.xlabel('Channels')
     plt.ylabel('Average Band Power')
-    plt.show()
+    plt.legend(loc=2)
+    plt.draw()
+
+def ica(data,fs):
+    """
+    input: samples x channels
+    output: samples x channels
+    """
+
+    #   Implement high pass filter @ 1Hz
+    def icaHighpass(data,cutoff,fs):
+        def params_fnc(data,cutoff,fs,order=4):
+            nyq = 0.5 * fs
+            normal_cutoff = cutoff / nyq
+            b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+            y = signal.filtfilt(b, a, data)
+            return y
+        filterEEG = []
+        for i in range(len(data.T)):
+            filterEEG.append(params_fnc(data.T[i],cutoff,fs))
+        filterEEG = np.array(filterEEG).T
+        return filterEEG
+
+    def confidenceInterval(samples):
+    #   At 95% significance level, tN -1 = 2.201
+        means = np.mean(samples)
+        std_dev = np.std(samples)
+        standard_error = std_dev/np.sqrt(len(samples))
+        lower_95_perc_bound = means - 2.201*standard_error
+        upper_95_perc_bound = means + 2.201*standard_error
+        return upper_95_perc_bound
+
+    def setZeros(data,index):
+        def params(data):
+            return np.zeros(len(data))
+        zeros = []
+        for i in range(len(index)):
+            zeros.append(params(data.T[index[i]]))
+        zeros = np.array(zeros)
+        return zeros
+
+    hpEEG = icaHighpass(data,cutoff=1,fs=fs) 
+
+    #   Computing ICA components
+    ica = FastICA(n_components=4, random_state=0, tol=0.0001)
+    comps = ica.fit_transform(hpEEG)
+    comps_1 = comps[:,0]
+    comps_2 = comps[:,1]
+    comps_3 = comps[:,2]
+    comps_4 = comps[:,3]
+
+    #   Computing kurtosis of ICA weights
+    comps_1_kurtosis = kurtosis(comps_1)
+    comps_2_kurtosis = kurtosis(comps_2)
+    comps_3_kurtosis = kurtosis(comps_3)
+    comps_4_kurtosis = kurtosis(comps_4)
+    comps_kurtosis = np.array([comps_1_kurtosis,comps_2_kurtosis,comps_3_kurtosis,comps_4_kurtosis])
+
+    #   Computing skewness of ICA weights
+    comps_1_skew = skew(comps_1)
+    comps_2_skew = skew(comps_2)
+    comps_3_skew = skew(comps_3)
+    comps_4_skew = skew(comps_4)
+    comps_skew = np.array([comps_1_skew,comps_2_skew,comps_3_skew,comps_4_skew])
+
+    #   Computing sample entropy of ICA weights
+    import antropy as ant
+    comps_1_sampEN = ant.sample_entropy(comps_1)
+    comps_2_sampEN = ant.sample_entropy(comps_2)
+    comps_3_sampEN = ant.sample_entropy(comps_3)
+    comps_4_sampEN = ant.sample_entropy(comps_4)
+    comps_sampEN = np.array([comps_1_sampEN,comps_2_sampEN,comps_3_sampEN,comps_4_sampEN])
+
+    #   Computing CI on to set threshold
+    threshold_kurt = confidenceInterval(comps_kurtosis)
+    threshold_skew = confidenceInterval(comps_skew)
+    threshold_sampEN = confidenceInterval(comps_sampEN)
+
+    "compare threshold with extracted parameter values"
+    #   Extract epochs
+    bool_ArtfCompsKurt = [comps_kurtosis>threshold_kurt]
+    idx_ArtfCompsKurt = np.asarray(np.where(bool_ArtfCompsKurt[0]==True))
+    bool_ArtfCompsSkew = [comps_skew>threshold_skew]
+    idx_ArtfCompsSkew = np.asarray(np.where(bool_ArtfCompsSkew[0]==True))
+    bool_ArtfCompsSampEN = [comps_sampEN>threshold_sampEN]
+    idx_ArtfCompsSampEN = np.asarray(np.where(bool_ArtfCompsSampEN[0]==True))
+
+    #   Merge index of components detected as artifacts by kurtosis, skewness, and sample entropy
+    idx_artf_comps = np.concatenate((idx_ArtfCompsKurt,idx_ArtfCompsSkew,idx_ArtfCompsSampEN),axis=1)
+    idx_artf_comps = np.unique(idx_artf_comps)
+
+    "Component identified as artifact is converted to arrays of zeros"
+    rejected_comps = setZeros(comps,idx_artf_comps)
+
+
+    "Return zero-ed ICs into the original windows per ICs"
+    for i in range(len(idx_artf_comps)):
+        idx_rejected_comps = np.arange(len(rejected_comps))
+        comps.T[idx_artf_comps[i]] = rejected_comps[idx_rejected_comps[i]]
+
+
+    "Recover clean signal from clean ICs"
+    restored = ica.inverse_transform(comps)
+    return restored
