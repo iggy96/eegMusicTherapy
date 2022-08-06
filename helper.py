@@ -59,7 +59,6 @@ def zipExtract(filenames,localDirectory,destDirectory,variableName,sFreq,data_co
 
 def avgBandPower(data,fs,low,high):
     #  Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #              or data - 3D numpy array (d0 = channels, d1 = no of windows, d2 = length of windows) of unfiltered EEG data
     #              fs      - sampling rate of hardware (defaults to config)
     #              low     - lower limit in Hz for the brain wave
     #              high    - upper limit in Hz for the brain wave
@@ -96,24 +95,45 @@ def plots(x,y,titles,pltclr):
 class filters:
     # filters for EEG data
     # filtering order: adaptive filter -> notch filter -> bandpass filter (or lowpass filter, highpass filter)
-    def notch(self,data,line,fs,iterations):
-        #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
-        #               cut     - frequency to be notched (defaults to config)
-        #               fs      - sampling rate of hardware (defaults to config)
-        #               Q       - Quality Factor (defaults to 30) that characterizes notch filter -3 dB bandwidth bw relative to its center frequency, Q = w0/bw.   
-        #   Output  :   y     - 2D numpy array (d0 = samples, d1 = channels) of notch-filtered EEG data
-        #   NOTES   :   
-        #   Todo    : report testing filter characteristics
-        def fn(data,line,fs,Q=30):
+
+    def notch(self,data,fs):
+        """
+        Function detects the exact frequency location of the line noise between 59 and 62Hz,then notches the PSD
+            Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
+                        cut     - frequency to be notched (defaults to config)
+                        fs      - sampling rate of hardware (defaults to config)
+                        Q       - Quality Factor (defaults to 30) that characterizes notch filter -3 dB bandwidth bw relative to its center frequency, Q = w0/bw.   
+            Output  :   y     - 2D numpy array (d0 = samples, d1 = channels) of notch-filtered EEG data
+            NOTES   :   
+            Todo    : report testing filter characteristics
+        """
+        def fn_1(data,fs):
+            win = 4 * fs
+            freqs,psd = signal.welch(data,fs,nperseg=win)
+            noiseFreq = np.asarray(np.where(np.logical_and(freqs>=59,freqs<65))).T
+            noisePSD = psd[noiseFreq[:,0]]
+            max_noisePSD = np.max(noisePSD)
+            idx_max_noisePSD = np.where(psd==max_noisePSD)[0]
+            max_noiseFreq = freqs[idx_max_noisePSD]
+            return max_noiseFreq
+
+        def fn_2(data,line,fs,Q=30):
             cut = line
             w0 = cut/(fs/2)
             b, a = signal.iirnotch(w0, Q)
             y = signal.filtfilt(b, a, data, axis=0)
             return y
-        output = fn(data,line,fs)
-        for i in range(iterations):
-            output = fn(output,line,fs)
-        return output
+
+        lineNoise = []
+        for i in range(len(data.T)):
+            lineNoise.append(fn_1(data[:,i],fs))
+        lineNoise = np.asarray(lineNoise)
+
+        notched = []
+        for i in range(len(data.T)):
+            notched.append(fn_2(data[:,i],lineNoise[i],fs))
+        notched = np.asarray(notched).T
+        return notched
 
     def butterBandPass(self,data,lowcut,highcut,fs,order=4):
         #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of unfiltered EEG data
@@ -816,6 +836,29 @@ def bandpowerPlots(x,y,title,label):
     plt.ylabel('Average Band Power')
     plt.legend(loc=2)
     plt.draw()
+
+def bandPowerPlots(x,y,figsize,subTitles,title,label):
+    #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
+    #               fs      - sampling rate of hardware (defaults to config)
+    #               nfft    - number of points to use in each block (defaults to config)
+    #               nOverlap- number of points to overlap between blocks (defaults to config)
+    #               figsize - size of figure (defaults to config)
+    #               titles  - titles for each channel (defaults to config)
+    if len(y.T) % 2 != 0:
+        nrows,ncols=1,int(len(y))
+    elif len(y.T) % 2 == 0:
+        nrows,ncols=2,int(len(y)/2)
+        fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
+        fig.suptitle(title)
+        for i, axs in enumerate(axs.flatten()):
+            axs.plot(x,y[i,0],c='b',marker="^",ls='--',label=label[0],fillstyle='none')
+            axs.plot(x,y[i,1],c='g',marker=(8,2,0),ls='--',label=label[1])
+            axs.plot(x,y[i,2],c='r',marker="v",ls='-',label=label[2])
+            axs.plot(x,y[i,3],c='m',marker="o",ls='--',label=label[3],fillstyle='none')
+            axs.set_title(subTitles[i])
+            axs.set(xlabel='Channels', ylabel='Average Band Power')
+            axs.label_outer()
+            axs.legend(loc=2)
 
 def ica(data,fs):
     """
