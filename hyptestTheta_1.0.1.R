@@ -124,7 +124,7 @@ normality_Task2 = normality_Task2$p.value
 parametricTest = function(data,value,pairs,normValue,varName){
     if (normValue > 0.05){
     # Paired t.Test: assume data is normally distributed
-       outcome= t.test(as.numeric(value)~pairs,data=data,paired=TRUE)
+       outcome= t.test(as.numeric(data[,value])~data[,pairs],data=data,paired=TRUE)
        print(paste("t.test:",varName,outcome$p.value))
        return (outcome$p.value)
     }
