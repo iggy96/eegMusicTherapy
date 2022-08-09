@@ -219,7 +219,6 @@ def slidingWindow(array,timing,window_size,step):
     out_final = out_final.transpose()
     return out_final
 
-
 def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               fs      - sampling rate of hardware (defaults to config)
