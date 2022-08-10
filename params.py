@@ -13,9 +13,9 @@ win = fs # 4*fs = 1024
 # step size = window size / 2
 window_size = 15360
 step_size = 15360
-nfft = 1024
-noverlap = 512
-brainwaves = dict(delta = [0.5,4],theta = [4,7],alpha = [8,12],beta = [12.5,30],gamma = [30.5,80])
+nfft = 256
+noverlap = nfft/2
+brainwaves = dict(delta = [0.5,4],theta = [4,7],alpha = [8,12],beta = [12.5,30],gamma = [30.5,100])
 
 # statistics parameters
 alpha_anova = 0.05
