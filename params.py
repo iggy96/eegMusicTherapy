@@ -6,7 +6,7 @@ noChannels = 4
 line = 60
 Q = 30
 lowcut = 0.1
-highcut = 100
+highcut = 45
 order = 4
 win = fs # 4*fs = 1024
 # 1280 (5-seconds) 2560 (10-seconds) 3072 (12-seconds) 1024 (4-seconds) 256 (1-second) default: 2560&1280
