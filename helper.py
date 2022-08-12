@@ -221,8 +221,8 @@ def slidingWindow(array,timing,window_size,step):
     out_final = out_final.transpose()
     return out_final
 
-"""
-def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
+
+def spectogram_Plot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               fs      - sampling rate of hardware (defaults to config)
     #               nfft    - number of points to use in each block (defaults to config)
@@ -239,7 +239,7 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     for i, axs in enumerate(axs.flatten()):
         power = 20*np.log10((data[:,i]))
         max_power = np.nanmax(power)    
-        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap,mode='psd',scale='dB',vmin=0,cmap='jet')
+        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
         axs.set_title(subTitles[i])
         axs.set_ylim(0,100)
         axs.set_yticks(np.arange(0,110,10))
@@ -249,7 +249,7 @@ def spectogramPlot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     cbar = plt.colorbar(im, ax=axs)
     cbar.set_label('dB/Hz')
     cbar.minorticks_on()
-"""
+
 
 
 def spectrogramPlot(plot_type,data,fs,time_s,figsize,subTitles,title):
@@ -411,7 +411,7 @@ def ica(data,fs):
     hpEEG = icaHighpass(data,cutoff=1,fs=fs) 
 
     #   Computing ICA components
-    ica = FastICA(n_components=4, random_state=0, tol=0.0001)
+    ica = FastICA(n_components=len(data.T), random_state=0, tol=0.0001)
     comps = ica.fit_transform(hpEEG)
     comps_1 = comps[:,0]
     comps_2 = comps[:,1]
