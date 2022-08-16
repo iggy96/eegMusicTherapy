@@ -74,7 +74,7 @@ def avgBandPower(data,fs,low,high):
     avg_BandPower= np.array(avg_BandPower).T
     return avg_BandPower
 
-def plots(x,y,titles,pltclr):
+def plots(x,y,titles,pltclr,ylim):
     x_lim = [x[0],x[-1]]
     if len(y.T) % 2 != 0:
         nrows,ncols=1,int(len(y.T))
@@ -84,7 +84,7 @@ def plots(x,y,titles,pltclr):
     for i, axs in enumerate(axs.flatten()):
         axs.plot(x, y[:,i], color=pltclr[i])
         axs.set_title(titles[i])
-        axs.set_ylim([np.max(y[:,i])+1000,np.min(y[:,i])-1000])
+        axs.set_ylim([ylim[0],ylim[1]])
         axs.set_xlim([x_lim[0],x_lim[1]])
         axs.set(xlabel='Time (s)', ylabel='Amplitude (uV)')
         axs.label_outer()
