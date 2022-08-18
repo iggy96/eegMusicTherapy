@@ -264,7 +264,7 @@ def spectrogramPlot(plot_type,data,fs,time_s,figsize,subTitles,title):
         f_3, nseg_3, Sxx_3 = signal.spectrogram(x = eeg[:,2], fs=sr, **myparams)
         f_4, nseg_4, Sxx_4 = signal.spectrogram(x = eeg[:,3], fs=sr, **myparams)
 
-        fig, ax = plt.subplots(2,4, figsize = figSize, constrained_layout=True)
+        fig, ax = plt.subplots(2,4, figsize = figsize, constrained_layout=True)
         fig.suptitle(title)
         ax[0,0].plot(time_s, eeg[:,0], lw = 1, color='C0')
         ax[0,1].plot(time_s, eeg[:,1], lw = 1, color='C1')
