@@ -74,6 +74,7 @@ def avgBandPower(data,fs,low,high):
     avg_BandPower= np.array(avg_BandPower).T
     return avg_BandPower
 
+"""
 def plots(x,y,titles,pltclr,ylim):
     x_lim = [x[0],x[-1]]
     if len(y.T) % 2 != 0:
@@ -88,6 +89,7 @@ def plots(x,y,titles,pltclr,ylim):
         axs.set_xlim([x_lim[0],x_lim[1]])
         axs.set(xlabel='Time (s)', ylabel='Amplitude (uV)')
         axs.label_outer()
+"""
 
 class filters:
     # filters for EEG data
@@ -221,8 +223,7 @@ def slidingWindow(array,timing,window_size,step):
     out_final = out_final.transpose()
     return out_final
 
-
-def spectogram_Plot(data,fs,nfft,nOverlap,figsize,subTitles,title):
+def spectrogram_plot(data,fs,figsize,subTitles,title):
     #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
     #               fs      - sampling rate of hardware (defaults to config)
     #               nfft    - number of points to use in each block (defaults to config)
@@ -236,10 +237,12 @@ def spectogram_Plot(data,fs,nfft,nOverlap,figsize,subTitles,title):
         nrows,ncols=2,int(len(y.T)/2)
     fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
     fig.suptitle(title)
-    for i, axs in enumerate(axs.flatten()):
-        power = 20*np.log10((data[:,i]))
-        max_power = np.nanmax(power)    
-        d, f, t, im = axs.specgram(data[:,i],NFFT=nfft,Fs=fs,noverlap=nOverlap)
+    for i, axs in enumerate(axs.flatten()): 
+        WinLength = int(0.5*fs) 
+        step = int(0.025*fs) 
+        nfft = WinLength
+        nOverlap = nfft - step
+        d, f, t, im = axs.specgram(data[:,i],nfft,fs,nOverlap,cmap='jet')
         axs.set_title(subTitles[i])
         axs.set_ylim(0,100)
         axs.set_yticks(np.arange(0,110,10))
@@ -250,15 +253,13 @@ def spectogram_Plot(data,fs,nfft,nOverlap,figsize,subTitles,title):
     cbar.set_label('dB/Hz')
     cbar.minorticks_on()
 
-
-
-def spectrogramPlot(plot_type,data,fs,time_s,figsize,subTitles,title):
-    if plot_type == "timeFreqDomain":
+def plots(data,time_s,fs,figsize,subTitles,title,timeFrequencyDomainPlots=False,frequencyDomainPlots=False,timeDomainPlots=False):
+    if timeFrequencyDomainPlots:
         eeg = data
         sr = fs
         WinLength = int(0.5*sr) 
         step = int(0.025*sr) 
-        myparams = dict(nperseg = WinLength, noverlap = WinLength-step, return_onesided=True, mode='magnitude')
+        myparams = dict(nperseg = WinLength, noverlap = WinLength-step, scaling='density', return_onesided=True, mode='psd')
         f_1, nseg_1, Sxx_1 = signal.spectrogram(x = eeg[:,0], fs=sr, **myparams)
         f_2, nseg_2, Sxx_2 = signal.spectrogram(x = eeg[:,1], fs=sr, **myparams)
         f_3, nseg_3, Sxx_3 = signal.spectrogram(x = eeg[:,2], fs=sr, **myparams)
@@ -279,20 +280,24 @@ def spectrogramPlot(plot_type,data,fs,time_s,figsize,subTitles,title):
         ax[0,2].set_title(subTitles[2])
         ax[0,3].set_title(subTitles[3])
         ax[1,0].set(xlabel='Time (s)', ylabel='Frequency (Hz)')
+        ax[1,0].set_ylim(0,45)
         ax[1,1].set(xlabel='Time (s)', ylabel='Frequency (Hz)')
+        ax[1,1].set_ylim(0,45)
         ax[1,2].set(xlabel='Time (s)', ylabel='Frequency (Hz)')
+        ax[1,2].set_ylim(0,45)
         ax[1,3].set(xlabel='Time (s)', ylabel='Frequency (Hz)')
+        ax[1,3].set_ylim(0,45)
         X1,X2,X3,X4 = nseg_1,nseg_2,nseg_3,nseg_4
         Y1,Y2,Y3,Y4 = f_1,f_2,f_3,f_4
         Z1,Z2,Z3,Z4 = Sxx_1,Sxx_2,Sxx_3,Sxx_4
         levels = 45
-        spectrum = ax[1,0].contourf(X1,Y1,Z1,levels, cmap='jet')#,'linecolor','none')
-        spectrum = ax[1,1].contourf(X2,Y2,Z2,levels, cmap='jet')#,'linecolor','none')
-        spectrum = ax[1,2].contourf(X3,Y3,Z3,levels, cmap='jet')#,'linecolor','none')
-        spectrum = ax[1,3].contourf(X4,Y4,Z4,levels, cmap='jet')#,'linecolor','none')
+        spectrum = ax[1,0].contourf(X1,Y1,Z1,levels, cmap='jet')
+        spectrum = ax[1,1].contourf(X2,Y2,Z2,levels, cmap='jet')
+        spectrum = ax[1,2].contourf(X3,Y3,Z3,levels, cmap='jet')
+        spectrum = ax[1,3].contourf(X4,Y4,Z4,levels, cmap='jet')
         cbar = plt.colorbar(spectrum)#, boundaries=np.linspace(0,1,5))
         cbar.ax.set_ylabel('Amplitude (dB)', rotation=90)
-    elif plot_type == "freqDomain":
+    elif frequencyDomainPlots:
         eeg = data
         sr = fs
         WinLength = int(0.5*sr) 
@@ -322,8 +327,27 @@ def spectrogramPlot(plot_type,data,fs,time_s,figsize,subTitles,title):
         spectrum = ax[3].contourf(X4,Y4,Z4,levels, cmap='jet')#,'linecolor','none')
         cbar = plt.colorbar(spectrum)#, boundaries=np.linspace(0,1,5))
         cbar.ax.set_ylabel('Amplitude (dB)', rotation=90)
-
-
+    elif timeDomainPlots:
+        eeg = data
+        sr = fs
+        fig, ax = plt.subplots(1,4, figsize=(figsize[0],figsize[1]), constrained_layout=True)
+        fig.suptitle(title)
+        ax[0].plot(time_s, eeg[:,0], lw = 1, color='C0')
+        ax[1].plot(time_s, eeg[:,1], lw = 1, color='C1')
+        ax[2].plot(time_s, eeg[:,2], lw = 1, color='C2')
+        ax[3].plot(time_s, eeg[:,3], lw = 1, color='C3')
+        ax[0].set_ylabel('Amplitude ($\mu V$)')
+        ax[1].set_ylabel('Amplitude ($\mu V$)')
+        ax[2].set_ylabel('Amplitude ($\mu V$)')
+        ax[3].set_ylabel('Amplitude ($\mu V$)')
+        ax[0].set_title(subTitles[0])
+        ax[1].set_title(subTitles[1])
+        ax[2].set_title(subTitles[2])
+        ax[3].set_title(subTitles[3])
+        ax[0].set(xlabel='Time (s)')
+        ax[1].set(xlabel='Time (s)')
+        ax[2].set(xlabel='Time (s)')
+        ax[3].set(xlabel='Time (s)')
 
 def psdPlots(data,fs,titles):
 # Define window length (4 seconds)
