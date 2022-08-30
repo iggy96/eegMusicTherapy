@@ -205,10 +205,18 @@ class filters:
         return y
        
 def slidingWindow(array,timing,window_size,step):
-    #   Inputs  :   array    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #               window_size - size of window to be used for sliding
-    #               freq   - step size for sliding window 
-    #   Output  :   3D array (columns of array,no of windows,window size)
+    """
+    Inputs:
+    1. data_array - 1D numpy array (d0 = channels) of data
+    2. timing_array - 1D numpy array (d0 = samples) of timing data
+    3. len(data_array) == len(timing_array)
+    4. window_size - number of samples to use in each window in seconds e.g. 1 is 1 second
+    5. step_size - the step size in seconds e.g.0.5 is 0.5 seconds 
+
+    Outputs:    
+    1. data_windows - 2D numpy array (d0 = windows, d1 = window size) of data
+    """
+
     def rolling_window(data_array,timing_array,window_size,step_size):
         idx_winSize = np.where(timing_array == window_size)[0][0]
         idx_stepSize = np.where(timing_array == step_size)[0][0]
@@ -253,7 +261,7 @@ def spectrogram_plot(data,fs,figsize,subTitles,title):
     cbar.set_label('dB/Hz')
     cbar.minorticks_on()
 
-def plots(data,time_s,fs,figsize,subTitles,title,timeFrequencyDomainPlots=False,frequencyDomainPlots=False,timeDomainPlots=False):
+def plots(data,time_s,fs,figsize,subTitles,title,tickRange,timeFrequencyDomainPlots=False,frequencyDomainPlots=False,timeDomainPlots=False):
     if timeFrequencyDomainPlots:
         eeg = data
         sr = fs
@@ -275,6 +283,10 @@ def plots(data,time_s,fs,figsize,subTitles,title,timeFrequencyDomainPlots=False,
         ax[0,1].set_ylabel('Amplitude ($\mu V$)')
         ax[0,2].set_ylabel('Amplitude ($\mu V$)')
         ax[0,3].set_ylabel('Amplitude ($\mu V$)')
+        ax[0,0].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[0,1].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[0,2].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[0,3].set_xticks(np.arange(tickRange[0],tickRange[1],10))
         ax[0,0].set_title(subTitles[0])
         ax[0,1].set_title(subTitles[1])
         ax[0,2].set_title(subTitles[2])
@@ -295,6 +307,10 @@ def plots(data,time_s,fs,figsize,subTitles,title,timeFrequencyDomainPlots=False,
         spectrum = ax[1,1].contourf(X2,Y2,Z2,levels, cmap='jet')
         spectrum = ax[1,2].contourf(X3,Y3,Z3,levels, cmap='jet')
         spectrum = ax[1,3].contourf(X4,Y4,Z4,levels, cmap='jet')
+        ax[1,0].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[1,1].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[1,2].set_xticks(np.arange(tickRange[0],tickRange[1],10))
+        ax[1,3].set_xticks(np.arange(tickRange[0],tickRange[1],10))
         cbar = plt.colorbar(spectrum)#, boundaries=np.linspace(0,1,5))
         cbar.ax.set_ylabel('Amplitude (dB)', rotation=90)
     elif frequencyDomainPlots:
