@@ -410,13 +410,13 @@ def bandPowerPlots(x,y,figsize,subTitles,title,label):
             axs.label_outer()
             axs.legend(loc=2)
 
-def ica(data,fs):
+def ICA(input,fs):
     """
-    input: samples x channels
-    output: samples x channels
+    Inputs:  input: 2D array of EEG data (samples x channels)
+                fs: sampling frequency
+    Outputs: restored signal (samples x channels)
     """
 
-    #   Implement high pass filter @ 1Hz
     def icaHighpass(data,cutoff,fs):
         def params_fnc(data,cutoff,fs,order=4):
             nyq = 0.5 * fs
@@ -448,37 +448,25 @@ def ica(data,fs):
         zeros = np.array(zeros)
         return zeros
 
-    hpEEG = icaHighpass(data,cutoff=1,fs=fs) 
+    def sampEntropy(data):
+        def params(input):
+            import antropy as ant
+            return ant.sample_entropy(input)
+        sampEn = []
+        for i in range(len(data.T)):
+            sampEn.append(params(data[:,i]))
+        sampEn = np.array(sampEn)
+        # replace inf with 0
+        sampEn[np.isinf(sampEn)] = 0
+        return sampEn
 
-    #   Computing ICA components
-    ica = FastICA(n_components=len(data.T), random_state=0, tol=0.0001)
-    comps = ica.fit_transform(hpEEG)
-    comps_1 = comps[:,0]
-    comps_2 = comps[:,1]
-    comps_3 = comps[:,2]
-    comps_4 = comps[:,3]
 
-    #   Computing kurtosis of ICA weights
-    comps_1_kurtosis = kurtosis(comps_1)
-    comps_2_kurtosis = kurtosis(comps_2)
-    comps_3_kurtosis = kurtosis(comps_3)
-    comps_4_kurtosis = kurtosis(comps_4)
-    comps_kurtosis = np.array([comps_1_kurtosis,comps_2_kurtosis,comps_3_kurtosis,comps_4_kurtosis])
-
-    #   Computing skewness of ICA weights
-    comps_1_skew = skew(comps_1)
-    comps_2_skew = skew(comps_2)
-    comps_3_skew = skew(comps_3)
-    comps_4_skew = skew(comps_4)
-    comps_skew = np.array([comps_1_skew,comps_2_skew,comps_3_skew,comps_4_skew])
-
-    #   Computing sample entropy of ICA weights
-    import antropy as ant
-    comps_1_sampEN = ant.sample_entropy(comps_1)
-    comps_2_sampEN = ant.sample_entropy(comps_2)
-    comps_3_sampEN = ant.sample_entropy(comps_3)
-    comps_4_sampEN = ant.sample_entropy(comps_4)
-    comps_sampEN = np.array([comps_1_sampEN,comps_2_sampEN,comps_3_sampEN,comps_4_sampEN])
+    hpEEG = icaHighpass(input,1,fs)
+    ica_ = FastICA(n_components=len(input.T), random_state=0, tol=0.0001)
+    comps = ica_.fit_transform(hpEEG)
+    comps_kurtosis = kurtosis(comps)
+    comps_skew = skew(comps)
+    comps_sampEN = sampEntropy(comps)
 
     #   Computing CI on to set threshold
     threshold_kurt = confidenceInterval(comps_kurtosis)
@@ -509,5 +497,45 @@ def ica(data,fs):
 
 
     "Recover clean signal from clean ICs"
-    restored = ica.inverse_transform(comps)
+    restored = ica_.inverse_transform(comps)
     return restored
+
+def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
+    """
+    Inputs: data - 1D, 2D or 3D numpy array
+                    1D - single channel
+                    2D - (samples,channels)
+                    3D - (files,samples,channels)
+            fs - sampling frequency
+            data_1D - boolean, True if data is 1D
+            data_2D - boolean, True if data is 2D
+            data_3D - boolean, True if data is 3D
+    Outputs: psd - 1D, 2D or 3D numpy array
+    """
+    def params_1D(dataIN,fs):
+        psd, freqs = psd_array_multitaper(dataIN, fs, adaptive=True,
+                                            normalization='full', verbose=0)
+        return freqs,psd
+    def params_2D(dataIN,fs):
+        freqs,psd = [],[]
+        for i in range(len(dataIN.T)):
+            f,p = params_1D(dataIN[:,i],fs)
+            freqs.append(f)
+            psd.append(p)
+        psd = np.array(psd)
+        freqs = np.array(freqs)
+        return freqs,psd
+
+    if data_1D:
+        freqs,psd = params_1D(data,fs)
+    if data_2D:
+        freqs,psd = params_2D(data,fs)
+    if data_3D:
+        freqs,psd = [],[]
+        for i in range(len(data)):
+            f,p = params_2D(data[i,:,:],fs)
+            freqs.append(f)
+            psd.append(p)
+        freqs = np.array(freqs)
+        psd = np.array(psd)
+    return freqs,psd
