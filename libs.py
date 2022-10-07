@@ -35,6 +35,6 @@ import antropy as ant
 from scipy.stats import kurtosis
 import shutil
 import os
+import warnings
 from mne.time_frequency import psd_array_multitaper
-#import warnings
-#warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
