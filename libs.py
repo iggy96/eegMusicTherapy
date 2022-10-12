@@ -38,3 +38,7 @@ import os
 import warnings
 from mne.time_frequency import psd_array_multitaper
 warnings.filterwarnings("ignore")
+# **********************************
+import emd
+from scipy.stats import entropy
+from sklearn.metrics import mutual_info_score
