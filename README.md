@@ -1,2 +1,0 @@
-# Music Therapy EEG Analysis
- The objective of this project is to investigate the impacts of the COVID-19 pandemic on frontline healthcare workers, and determine if a virtual music therapy can improve mood and emotional state in this population. Participants will be evaluated for measures of emotion using a standardized neurocognitive test battery. Electroencephalography will also be investigated to assess changes in objective markers of brain function as a result of participation in music therapy
