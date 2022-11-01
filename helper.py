@@ -74,23 +74,6 @@ def avgBandPower(data,fs,low,high):
     avg_BandPower= np.array(avg_BandPower).T
     return avg_BandPower
 
-"""
-def plots(x,y,titles,pltclr,ylim):
-    x_lim = [x[0],x[-1]]
-    if len(y.T) % 2 != 0:
-        nrows,ncols=1,int(len(y.T))
-    elif len(y.T) % 2 == 0:
-        nrows,ncols=2,int(len(y.T)/2)
-    fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(15,8))
-    for i, axs in enumerate(axs.flatten()):
-        axs.plot(x, y[:,i], color=pltclr[i])
-        axs.set_title(titles[i])
-        axs.set_ylim([ylim[0],ylim[1]])
-        axs.set_xlim([x_lim[0],x_lim[1]])
-        axs.set(xlabel='Time (s)', ylabel='Amplitude (uV)')
-        axs.label_outer()
-"""
-
 class filters:
     # filters for EEG data
     # filtering order: adaptive filter -> notch filter -> bandpass filter (or lowpass filter, highpass filter)
@@ -231,43 +214,13 @@ def slidingWindow(array,timing,window_size,step):
     out_final = out_final.transpose()
     return out_final
 
-def spectrogram_plot(data,fs,figsize,subTitles,title):
-    #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #               fs      - sampling rate of hardware (defaults to config)
-    #               nfft    - number of points to use in each block (defaults to config)
-    #               nOverlap- number of points to overlap between blocks (defaults to config)
-    #               figsize - size of figure (defaults to config)
-    #               titles  - titles for each channel (defaults to config)
-    y = data
-    if len(y.T) % 2 != 0:
-        nrows,ncols=1,int(len(y.T))
-    elif len(y.T) % 2 == 0:
-        nrows,ncols=2,int(len(y.T)/2)
-    fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
-    fig.suptitle(title)
-    for i, axs in enumerate(axs.flatten()): 
-        WinLength = int(0.5*fs) 
-        step = int(0.025*fs) 
-        nfft = WinLength
-        nOverlap = nfft - step
-        d, f, t, im = axs.specgram(data[:,i],nfft,fs,nOverlap,cmap='jet')
-        axs.set_title(subTitles[i])
-        axs.set_ylim(0,100)
-        axs.set_yticks(np.arange(0,110,10))
-        axs.set(xlabel='Time (s)', ylabel='Frequency (Hz)')
-        axs.label_outer()
-        axs
-    cbar = plt.colorbar(im, ax=axs)
-    cbar.set_label('dB/Hz')
-    cbar.minorticks_on()
-
 def plots(data,time_s,fs,figsize,subTitles,title,tickRange,timeFrequencyDomainPlots=False,frequencyDomainPlots=False,timeDomainPlots=False):
     if timeFrequencyDomainPlots:
         eeg = data
         sr = fs
-        WinLength = int(0.5*sr) 
-        step = int(0.025*sr) 
-        myparams = dict(nperseg = WinLength, noverlap = WinLength-step, scaling='density', return_onesided=True, mode='psd')
+        WinLength = 2     #int(0.5*sr) 
+        step = 256      #int(0.025*sr) 
+        myparams = dict(nperseg = 1024, noverlap = 512, scaling='density', return_onesided=True, mode='psd')
         f_1, nseg_1, Sxx_1 = signal.spectrogram(x = eeg[:,0], fs=sr, **myparams)
         f_2, nseg_2, Sxx_2 = signal.spectrogram(x = eeg[:,1], fs=sr, **myparams)
         f_3, nseg_3, Sxx_3 = signal.spectrogram(x = eeg[:,2], fs=sr, **myparams)
@@ -410,6 +363,46 @@ def bandPowerPlots(x,y,figsize,subTitles,title,label):
             axs.label_outer()
             axs.legend(loc=2)
 
+def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
+    """
+    Inputs: data - 1D, 2D or 3D numpy array
+                    1D - single channel
+                    2D - (samples,channels)
+                    3D - (files,samples,channels)
+            fs - sampling frequency
+            data_1D - boolean, True if data is 1D
+            data_2D - boolean, True if data is 2D
+            data_3D - boolean, True if data is 3D
+    Outputs: psd - 1D, 2D or 3D numpy array
+    """
+    def params_1D(dataIN,fs):
+        psd, freqs = psd_array_multitaper(dataIN, fs, adaptive=True,
+                                            normalization='full', verbose=0)
+        return freqs,psd
+    def params_2D(dataIN,fs):
+        freqs,psd = [],[]
+        for i in range(len(dataIN.T)):
+            f,p = params_1D(dataIN[:,i],fs)
+            freqs.append(f)
+            psd.append(p)
+        psd = np.array(psd)
+        freqs = np.array(freqs)
+        return freqs,psd
+
+    if data_1D:
+        freqs,psd = params_1D(data,fs)
+    if data_2D:
+        freqs,psd = params_2D(data,fs)
+    if data_3D:
+        freqs,psd = [],[]
+        for i in range(len(data)):
+            f,p = params_2D(data[i,:,:],fs)
+            freqs.append(f)
+            psd.append(p)
+        freqs = np.array(freqs)
+        psd = np.array(psd)
+    return freqs,psd
+
 def ICA(input,fs):
     """
     Inputs:  input: 2D array of EEG data (samples x channels)
@@ -499,43 +492,3 @@ def ICA(input,fs):
     "Recover clean signal from clean ICs"
     restored = ica_.inverse_transform(comps)
     return restored
-
-def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
-    """
-    Inputs: data - 1D, 2D or 3D numpy array
-                    1D - single channel
-                    2D - (samples,channels)
-                    3D - (files,samples,channels)
-            fs - sampling frequency
-            data_1D - boolean, True if data is 1D
-            data_2D - boolean, True if data is 2D
-            data_3D - boolean, True if data is 3D
-    Outputs: psd - 1D, 2D or 3D numpy array
-    """
-    def params_1D(dataIN,fs):
-        psd, freqs = psd_array_multitaper(dataIN, fs, adaptive=True,
-                                            normalization='full', verbose=0)
-        return freqs,psd
-    def params_2D(dataIN,fs):
-        freqs,psd = [],[]
-        for i in range(len(dataIN.T)):
-            f,p = params_1D(dataIN[:,i],fs)
-            freqs.append(f)
-            psd.append(p)
-        psd = np.array(psd)
-        freqs = np.array(freqs)
-        return freqs,psd
-
-    if data_1D:
-        freqs,psd = params_1D(data,fs)
-    if data_2D:
-        freqs,psd = params_2D(data,fs)
-    if data_3D:
-        freqs,psd = [],[]
-        for i in range(len(data)):
-            f,p = params_2D(data[i,:,:],fs)
-            freqs.append(f)
-            psd.append(p)
-        freqs = np.array(freqs)
-        psd = np.array(psd)
-    return freqs,psd
