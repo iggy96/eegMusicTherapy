@@ -187,29 +187,29 @@ class filters:
         y = signal.filtfilt(b, a, data)
         return y
        
-def slidingWindow(array,timing,window_size,step):
+def slidingWindow(data_2D,timing,window_size,step):
     """
     Inputs:
-    1. data_array - 1D numpy array (d0 = channels) of data
+    1. data_2D - 2D numpy array (d0=samples, d1=channels) of data
     2. timing_array - 1D numpy array (d0 = samples) of timing data
     3. len(data_array) == len(timing_array)
     4. window_size - number of samples to use in each window in seconds e.g. 1 is 1 second
     5. step_size - the step size in seconds e.g.0.5 is 0.5 seconds 
 
     Outputs:    
-    1. data_windows - 2D numpy array (d0 = windows, d1 = window size) of data
+    1. data_windows - 3D numpy array (d0=channels, d0=windows, d1=window size) of data
     """
 
-    def rolling_window(data_array,timing_array,window_size,step_size):
-        idx_winSize = np.where(timing_array == window_size)[0][0]
-        idx_stepSize = np.where(timing_array == step_size)[0][0]
-        shape = (data_array.shape[0] - idx_winSize + 1, idx_winSize)
-        strides = (data_array.strides[0],) + data_array.strides
-        rolled = np.lib.stride_tricks.as_strided(data_array, shape=shape, strides=strides)
-        return rolled[np.arange(0,shape[0],idx_stepSize)]
+    def params(data_1D,timing_array,window_size,step_size):
+        idx_winsize = np.where(timing_array == window_size)[0][0]
+        idx_stepsize = np.where(timing_array == step_size)[0][0]
+        frame_len, hop_len = idx_winsize,idx_stepsize
+        frames = librosa.util.frame(data_1D, frame_length=frame_len, hop_length=hop_len)
+        windowed_frames = (np.hanning(frame_len).reshape(-1, 1)*frames).T
+        return windowed_frames
     out_final = []
-    for i in range(len(array.T)):
-        out_final.append(rolling_window(array[:,i],timing,window_size,step))
+    for i in range(len(data_2D.T)):
+        out_final.append(params(data_2D[:,i],timing,window_size,step))
     out_final = np.asarray(out_final).T
     out_final = out_final.transpose()
     return out_final
@@ -403,92 +403,53 @@ def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
         psd = np.array(psd)
     return freqs,psd
 
-def ICA(input,fs):
-    """
-    Inputs:  input: 2D array of EEG data (samples x channels)
-                fs: sampling frequency
-    Outputs: restored signal (samples x channels)
-    """
+def ar_maximumgradient(input_2D,threshold_value,timearray,len_window,step_size,choice_numwindows,channels):
+    def params(data1D,threshold,time_array,winsize,step,numwindows,chan_title):
+        def maxgrad2D(data2D):
+            diff_succ_val = []
+            for i in range(data2D.shape[0]):
+                diff_succ_val.append(np.max(np.diff(data2D[i,:])))
+            return np.array(diff_succ_val)
 
-    def icaHighpass(data,cutoff,fs):
-        def params_fnc(data,cutoff,fs,order=4):
-            nyq = 0.5 * fs
-            normal_cutoff = cutoff / nyq
-            b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
-            y = signal.filtfilt(b, a, data)
-            return y
-        filterEEG = []
-        for i in range(len(data.T)):
-            filterEEG.append(params_fnc(data.T[i],cutoff,fs))
-        filterEEG = np.array(filterEEG).T
-        return filterEEG
+        def slidingwindow(data_1D,timing_array,window_size,step_size):
+            idx_winsize = np.where(timing_array == window_size)[0][0]
+            idx_stepsize = np.where(timing_array == step_size)[0][0]
+            frame_len, hop_len = idx_winsize,idx_stepsize
+            frames = librosa.util.frame(data_1D, frame_length=frame_len, hop_length=hop_len)
+            windowed_frames = (np.hanning(frame_len).reshape(-1, 1)*frames).T
+            return windowed_frames
 
-    def confidenceInterval(samples):
-    #   At 95% significance level, tN -1 = 2.201
-        means = np.mean(samples)
-        std_dev = np.std(samples)
-        standard_error = std_dev/np.sqrt(len(samples))
-        lower_95_perc_bound = means - 2.201*standard_error
-        upper_95_perc_bound = means + 2.201*standard_error
-        return upper_95_perc_bound
+        wins2D = slidingwindow(data1D,time_array,winsize,step)
+        len_windows = wins2D.shape[0]
+        maxgrads = maxgrad2D(wins2D)
+        highest_maxgrads = np.amax(maxgrads)
+        lowest_maxgrads = np.amin(maxgrads)
+        print('maximum gradient value of worst segment for %s is %f' % (chan_title,highest_maxgrads))
+        print('minimum gradient value of best segment for %s is %f' % (chan_title,lowest_maxgrads))
+        idxs_badMaxGrads = np.where(maxgrads > threshold)[0]
+        idxs_cleanMaxGrads = np.where(maxgrads <= threshold)[0]
+        idx_highBadMaxGrad = np.where(maxgrads == highest_maxgrads)[0][0]
+        idx_highCleanMaxGrad = np.where(maxgrads == lowest_maxgrads)[0][0]
+        bad_dataset = wins2D[idxs_badMaxGrads,:]
+        clean_dataset = wins2D[idxs_cleanMaxGrads,:]
+        print('number of non-artifactual segements for %s is %d' % (chan_title,len(idxs_cleanMaxGrads)))
+        print('number of artifactual segements for %s is %d' % (chan_title,len(idxs_badMaxGrads)))
+        remain_windows = len_windows - len(clean_dataset)
+        clean_dataset = np.concatenate((clean_dataset,np.full((remain_windows,wins2D.shape[1]),np.nan)),axis=0)
+        clean_dataset = clean_dataset[0:numwindows,:]
+        worst_data, best_data = wins2D[idx_highBadMaxGrad,:], wins2D[idx_highCleanMaxGrad,:]
+        fig,ax = plt.subplots(1,2,figsize=(10,3))
+        fig.suptitle(chan_title)
+        ax[0].plot(worst_data,color='red')
+        ax[0].set_title('Worst data')
+        ax[0].set_ylabel('Amplitude')
+        ax[1].plot(best_data,color='green')
+        ax[1].set_title('Best data')
+        ax[1].set_ylabel('Amplitude')
+        plt.show()
+        return clean_dataset
 
-    def setZeros(data,index):
-        def params(data):
-            return np.zeros(len(data))
-        zeros = []
-        for i in range(len(index)):
-            zeros.append(params(data.T[index[i]]))
-        zeros = np.array(zeros)
-        return zeros
-
-    def sampEntropy(data):
-        def params(input):
-            import antropy as ant
-            return ant.sample_entropy(input)
-        sampEn = []
-        for i in range(len(data.T)):
-            sampEn.append(params(data[:,i]))
-        sampEn = np.array(sampEn)
-        # replace inf with 0
-        sampEn[np.isinf(sampEn)] = 0
-        return sampEn
-
-
-    hpEEG = icaHighpass(input,1,fs)
-    ica_ = FastICA(n_components=len(input.T), random_state=0, tol=0.0001)
-    comps = ica_.fit_transform(hpEEG)
-    comps_kurtosis = kurtosis(comps)
-    comps_skew = skew(comps)
-    comps_sampEN = sampEntropy(comps)
-
-    #   Computing CI on to set threshold
-    threshold_kurt = confidenceInterval(comps_kurtosis)
-    threshold_skew = confidenceInterval(comps_skew)
-    threshold_sampEN = confidenceInterval(comps_sampEN)
-
-    "compare threshold with extracted parameter values"
-    #   Extract epochs
-    bool_ArtfCompsKurt = [comps_kurtosis>threshold_kurt]
-    idx_ArtfCompsKurt = np.asarray(np.where(bool_ArtfCompsKurt[0]==True))
-    bool_ArtfCompsSkew = [comps_skew>threshold_skew]
-    idx_ArtfCompsSkew = np.asarray(np.where(bool_ArtfCompsSkew[0]==True))
-    bool_ArtfCompsSampEN = [comps_sampEN>threshold_sampEN]
-    idx_ArtfCompsSampEN = np.asarray(np.where(bool_ArtfCompsSampEN[0]==True))
-
-    #   Merge index of components detected as artifacts by kurtosis, skewness, and sample entropy
-    idx_artf_comps = np.concatenate((idx_ArtfCompsKurt,idx_ArtfCompsSkew,idx_ArtfCompsSampEN),axis=1)
-    idx_artf_comps = np.unique(idx_artf_comps)
-
-    "Component identified as artifact is converted to arrays of zeros"
-    rejected_comps = setZeros(comps,idx_artf_comps)
-
-
-    "Return zero-ed ICs into the original windows per ICs"
-    for i in range(len(idx_artf_comps)):
-        idx_rejected_comps = np.arange(len(rejected_comps))
-        comps.T[idx_artf_comps[i]] = rejected_comps[idx_rejected_comps[i]]
-
-
-    "Recover clean signal from clean ICs"
-    restored = ica_.inverse_transform(comps)
-    return restored
+    output_2D = []
+    for i in range(input_2D.shape[1]):
+        output_2D.append(params(input_2D[:,i],threshold_value,timearray,len_window,step_size,choice_numwindows,channels[i]))
+    return np.array(output_2D)
