@@ -52,26 +52,19 @@ def zipExtract(filenames,localDirectory,destDirectory,variableName,sFreq,data_co
     resampled_time = np.array(resampled_time)
     return files_dest,resampled_data,resampled_time
 
-def avgBandPower(data,fs,low,high):
-    #   Utilizes MultiTaper method to calculate the average power of a band
-    #  Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #              fs      - sampling rate of hardware (defaults to config)
-    #              low     - lower limit in Hz for the brain wave
-    #              high    - upper limit in Hz for the brain wave
-    #              win     - size of window to be used for sliding
-    #   Output  :   3D array (columns of array,no of windows,window size)
-    def absPower(data,fs,low,high): 
-        psd, freqs = psd_array_multitaper(data, fs, adaptive=True,
-                                            normalization='full', verbose=0)
+def psdRelativeBandPower(data_psd,data_freq,low,high):
+    def params(psd,freqs,low,high): 
         freq_res = freqs[1] - freqs[0]
         idx_band = np.logical_and(freqs >= low, freqs <= high)
         bp = simps(psd[idx_band], dx=freq_res)  
+        #bp /= simps(psd, dx=freq_res)
         return bp
 
     avg_BandPower = []
-    for i in range(len(data.T)):
-        avg_BandPower.append(absPower(data[:,i],fs,low,high))
+    for i in range(len(data_psd.T)):
+        avg_BandPower.append(params(data_psd[:,i],data_freq,low,high))
     avg_BandPower= np.array(avg_BandPower).T
+    avg_BandPower = np.nan_to_num(avg_BandPower, nan=np.nanmean(avg_BandPower))
     return avg_BandPower
 
 class filters:
@@ -318,52 +311,7 @@ def plots(data,time_s,fs,figsize,subTitles,title,tickRange,timeFrequencyDomainPl
         ax[2].set(xlabel='Time (s)')
         ax[3].set(xlabel='Time (s)')
 
-def psdPlots(data,fs,titles):
-# Define window length (4 seconds)
-    win = 4 * fs
-    freqs_1,psd_1 = signal.welch(data[:,0],fs,nperseg=win)
-    freqs_2,psd_2 = signal.welch(data[:,1],fs,nperseg=win)
-    freqs_3,psd_3 = signal.welch(data[:,2],fs,nperseg=win)
-    freqs_4,psd_4 = signal.welch(data[:,3],fs,nperseg=win)
-    fig, axs = plt.subplots(2,2,figsize=(15,8))
-    axs[0, 0].plot(freqs_1,psd_1)
-    axs[0, 0].set_title(titles[0])
-    axs[0, 1].plot(freqs_2,psd_2, 'tab:orange')
-    axs[0, 1].set_title(titles[1])
-    axs[1, 0].plot(freqs_3,psd_3, 'tab:green')
-    axs[1, 0].set_title(titles[2])
-    axs[1, 1].plot(freqs_4,psd_4, 'tab:red')
-    axs[1, 1].set_title(titles[3])
-    for ax in axs.flat:
-        ax.set(xlabel='Frequency (Hz)', ylabel='PSD (dB/Hz)')
-    # Hide x labels and tick labels for top plots and y ticks for right plots.
-    for ax in axs.flat:
-        ax.label_outer()
-    
-def bandPowerPlots(x,y,figsize,subTitles,title,label):
-    #   Inputs  :   data    - 2D numpy array (d0 = samples, d1 = channels) of filtered EEG data
-    #               fs      - sampling rate of hardware (defaults to config)
-    #               nfft    - number of points to use in each block (defaults to config)
-    #               nOverlap- number of points to overlap between blocks (defaults to config)
-    #               figsize - size of figure (defaults to config)
-    #               titles  - titles for each channel (defaults to config)
-    if len(y.T) % 2 != 0:
-        nrows,ncols=1,int(len(y))
-    elif len(y.T) % 2 == 0:
-        nrows,ncols=2,int(len(y)/2)
-        fig, axs = plt.subplots(nrows,ncols,sharex=True,sharey=True,figsize=(figsize[0],figsize[1]))
-        fig.suptitle(title)
-        for i, axs in enumerate(axs.flatten()):
-            axs.plot(x,y[i,0],c='b',marker="^",ls='--',label=label[0],fillstyle='none')
-            axs.plot(x,y[i,1],c='g',marker=(8,2,0),ls='--',label=label[1])
-            axs.plot(x,y[i,2],c='r',marker="v",ls='-',label=label[2])
-            axs.plot(x,y[i,3],c='m',marker="o",ls='--',label=label[3],fillstyle='none')
-            axs.set_title(subTitles[i])
-            axs.set(xlabel='Channels', ylabel='Average Band Power')
-            axs.label_outer()
-            axs.legend(loc=2)
-
-def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
+def computePSD(data,fs,data_type):
     """
     Inputs: data - 1D, 2D or 3D numpy array
                     1D - single channel
@@ -376,32 +324,25 @@ def psd(data,fs,data_1D=False,data_2D=False,data_3D=False):
     Outputs: psd - 1D, 2D or 3D numpy array
     """
     def params_1D(dataIN,fs):
-        psd, freqs = psd_array_multitaper(dataIN, fs, adaptive=True,
-                                            normalization='full', verbose=0)
+        psd, freqs = psd_array_multitaper(dataIN, fs,adaptive=True,normalization='full',verbose=0)
         return freqs,psd
     def params_2D(dataIN,fs):
         freqs,psd = [],[]
         for i in range(len(dataIN.T)):
-            f,p = params_1D(dataIN[:,i],fs)
-            freqs.append(f)
-            psd.append(p)
-        psd = np.array(psd)
-        freqs = np.array(freqs)
-        return freqs,psd
+            freqs.append(params_1D(dataIN[:,i],fs)[0])
+            psd.append(params_1D(dataIN[:,i],fs)[1])
+        return np.array(freqs),np.array(psd)
 
-    if data_1D:
-        freqs,psd = params_1D(data,fs)
-    if data_2D:
-        freqs,psd = params_2D(data,fs)
-    if data_3D:
-        freqs,psd = [],[]
+    if data_type == '1D':
+        frequency,powerspectraldensity = params_1D(data,fs)
+    if data_type == '2D':
+        frequency,powerspectraldensity = params_2D(data,fs)
+    if data_type == '3D':
+        frequency,powerspectraldensity = [],[]
         for i in range(len(data)):
-            f,p = params_2D(data[i,:,:],fs)
-            freqs.append(f)
-            psd.append(p)
-        freqs = np.array(freqs)
-        psd = np.array(psd)
-    return freqs,psd
+            frequency.append(params_2D(data[i,:,:],fs)[0])
+            powerspectraldensity.append(params_2D(data[i,:,:],fs)[1])
+    return np.array(frequency),np.array(powerspectraldensity)
 
 def ar_maximumgradient(input_2D,threshold_value,timearray,len_window,step_size,choice_numwindows,channels):
     def params(data1D,threshold,time_array,winsize,step,numwindows,chan_title):
@@ -420,7 +361,6 @@ def ar_maximumgradient(input_2D,threshold_value,timearray,len_window,step_size,c
             return windowed_frames
 
         wins2D = slidingwindow(data1D,time_array,winsize,step)
-        len_windows = wins2D.shape[0]
         maxgrads = maxgrad2D(wins2D)
         highest_maxgrads = np.amax(maxgrads)
         lowest_maxgrads = np.amin(maxgrads)
@@ -432,11 +372,15 @@ def ar_maximumgradient(input_2D,threshold_value,timearray,len_window,step_size,c
         idx_highCleanMaxGrad = np.where(maxgrads == lowest_maxgrads)[0][0]
         bad_dataset = wins2D[idxs_badMaxGrads,:]
         clean_dataset = wins2D[idxs_cleanMaxGrads,:]
-        print('number of non-artifactual segements for %s is %d' % (chan_title,len(idxs_cleanMaxGrads)))
-        print('number of artifactual segements for %s is %d' % (chan_title,len(idxs_badMaxGrads)))
-        remain_windows = len_windows - len(clean_dataset)
+        remain_windows = len(wins2D) - len(clean_dataset)
         clean_dataset = np.concatenate((clean_dataset,np.full((remain_windows,wins2D.shape[1]),np.nan)),axis=0)
+        print('total non-artifactual segments for %s is %d' % (chan_title,len(idxs_cleanMaxGrads)))
+        print('total artifactual segments for %s is %d' % (chan_title,len(idxs_badMaxGrads)))
         clean_dataset = clean_dataset[0:numwindows,:]
+        if clean_dataset.size == 0:
+            print('no clean data for %s' % chan_title)
+            clean_dataset = np.full((numwindows,wins2D.shape[1]),np.nan)
+        print('total chosen non-artifactual segments for %s is %d' % (chan_title,len(clean_dataset)))
         worst_data, best_data = wins2D[idx_highBadMaxGrad,:], wins2D[idx_highCleanMaxGrad,:]
         fig,ax = plt.subplots(1,2,figsize=(10,3))
         fig.suptitle(chan_title)
