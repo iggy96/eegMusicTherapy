@@ -397,3 +397,4 @@ def ar_maximumgradient(input_2D,threshold_value,timearray,len_window,step_size,c
     for i in range(input_2D.shape[1]):
         output_2D.append(params(input_2D[:,i],threshold_value,timearray,len_window,step_size,choice_numwindows,channels[i]))
     return np.array(output_2D)
+
