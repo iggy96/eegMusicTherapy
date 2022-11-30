@@ -5,6 +5,6 @@ channels = ['TP9','AF7','AF8','TP10']
 noChannels = 4
 line = 60
 Q = 30
-lowcut = 5
+lowcut = 1
 highcut = 44
 brainwaves = dict(delta=[0.5,4],theta=[4,8],alpha=[8,13],beta=[13,30],gamma=[30,44])
